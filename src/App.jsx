@@ -135,7 +135,6 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
     Powered by Ntemba POS       
 ================================````;
 
-    // Open WhatsApp Web with the thermal pre-formatted receipt string
     const encodedUri = encodeURIComponent(receiptText);
     window.open(`https://api.whatsapp.com/send?text=${encodedUri}`, '_blank');
   };
@@ -482,14 +481,47 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
               </div>
             )}
 
-            {/* TAB 3: REPORTS & BANK SCORING PDF */}
+            {/* TAB 3: REPORTS, PROFIT & LOSS, & BANK SCORING */}
             {activeBottomTab === 'reports' && (
               <div className="p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
                 
+                {/* 1. SIMPLE PROFIT & LOSS STATEMENT (ALL TIERS) */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-                  <h2 className="text-base font-black text-slate-900">📊 Sales Performance Reports</h2>
-                  <p className="text-xs text-slate-500">Aggregated transaction records across your plan audit horizon: <strong className="text-indigo-600">{reportMonthsAllowed} Months</strong> ({selectedTier} Tier)</p>
-                  
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <div>
+                      <span className="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Financial Statement ({selectedTier} Tier)</span>
+                      <h2 className="text-base font-black text-slate-900 mt-1">Profit & Loss (P&L) Summary</h2>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400">{reportMonthsAllowed}M Horizon</span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 text-xs font-medium">
+                    <div className="flex justify-between py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600">Total Gross Revenue</span>
+                      <strong className="text-slate-900">ZMW 48,250.00</strong>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600">Cost of Goods Sold (COGS)</span>
+                      <strong className="text-red-600">- ZMW 29,400.00</strong>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-slate-100 font-bold bg-slate-50 px-2 rounded">
+                      <span className="text-slate-800">Gross Profit</span>
+                      <span className="text-emerald-600">ZMW 18,850.00</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600">Operating Expenses (Rent, Utilities)</span>
+                      <strong className="text-red-600">- ZMW 4,200.00</strong>
+                    </div>
+                    <div className="flex justify-between py-2 bg-emerald-50 px-3 rounded-xl text-sm font-black text-slate-900 mt-1">
+                      <span>Net Profit</span>
+                      <span className="text-emerald-700">ZMW 14,650.00</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. SALES PERFORMANCE & BANK SCORING */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                  <h2 className="text-base font-black text-slate-900">📊 Sales Volume Metrics</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="bg-indigo-50 border p-3 rounded-xl">
                       <span className="text-[10px] font-bold text-indigo-600 uppercase">Total Revenue</span>
@@ -526,6 +558,20 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                     📥 Download Certified Bank Financial Scoring PDF ({reportMonthsAllowed}M Horizon)
                   </button>
                 </div>
+
+                {/* 3. ENTERPRISE DESKTOP ADVISORY NOTICE */}
+                {selectedTier === 'Enterprise' && (
+                  <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-5 rounded-2xl border border-indigo-500/30 text-white flex flex-col gap-2 shadow-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🖥️</span>
+                      <h3 className="text-sm font-black text-indigo-300">Enterprise Desktop Version Advisory</h3>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      While your mobile device terminal handles everyday sales and stock entries, advanced Tier 3 tools—such as 
+                      <strong className="text-white"> Multi-Branch Warehouse Synchronization</strong>, <strong className="text-white">Automated Tax Authority (ZRA) Integration</strong>, and <strong className="text-white">Deep ERP Bulk CSV/Excel Reporting</strong>—are built for high performance and available directly on the <strong className="text-indigo-300">Ntemba POS Desktop Terminal</strong>.
+                    </p>
+                  </div>
+                )}
 
               </div>
             )}
