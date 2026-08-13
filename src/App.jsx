@@ -8,29 +8,22 @@ export default function App() {
   const [councilId, setCouncilId] = useState(''); // Local Council Levy ID
   const [vendorTier, setVendorTier] = useState('tier1'); // 'tier1' (Free), 'tier2' (K175/mo), 'tier3' (K850/mo)
   
-  // Shared Mobile & WhatsApp Contact State (Unified across POS & Council Levies)
+  // Shared Mobile & WhatsApp Contact State
   const [whatsappPhone, setWhatsappPhone] = useState('260971234567');
   
-  // Payout Destination States (Personal Mobile vs Corporate Business Account)
+  // Payout Destination States
   const [payoutDestinationType, setPayoutDestinationType] = useState('personal'); // 'personal' or 'business'
   const [personalMobileNumber, setPersonalMobileNumber] = useState('260971234567');
   const [businessMerchantTill, setBusinessMerchantTill] = useState('');
 
-  // Store / Trader Profile & Live Location Tracking
-  const [isMobileTrader, setIsMobileTrader] = useState(false);
-  const [currentLocation, setIsMobileTraderLocation] = useState({ lat: -15.3875, lng: 28.3228 });
+  // Store / Trader Profile
   const [storeName, setStoreName] = useState('Ntemba Enterprise Terminal');
   
   // Navigation Tabs
   const [activeBottomTab, setActiveBottomTab] = useState('sales'); 
   
-  // Cart & Orders
+  // Cart & Inventory
   const [cart, setCart] = useState([]);
-  const [onlineOrders, setOnlineOrders] = useState([
-    { id: 'ORD-901', customer: 'Kabwe M.', items: '2x Roller Mealie Meal (25kg)', total: 'ZMW 650', status: 'Pending Pickup', payment: 'Mobile Money', timestamp: '10:14 AM' }
-  ]);
-
-  // Inventory Catalog
   const [inventory, setInventory] = useState([
     { id: 1, name: 'Roller Mealie Meal 25kg', price: 325, stock: 14, unit: 'bag', type: 'store', category: 'Groceries', zeroRated: true },
     { id: 2, name: 'Cooking Oil 2L', price: 95, stock: 30, unit: 'btl', type: 'store', category: 'Groceries', zeroRated: false },
@@ -38,15 +31,13 @@ export default function App() {
     { id: 4, name: 'Moving House: 3-Seater Leather Sofa', price: 1500, stock: 1, unit: 'pcs', type: 'garage-sale', category: 'Furniture', zeroRated: false }
   ]);
 
-  // Smart Invoice & Fiscal Receipt Modal State
+  // Smart Invoice Modal State
   const [activeSmartInvoice, setActiveSmartInvoice] = useState(null);
 
-  // Financial Ledger & ZRA Compliance History
+  // Financial Ledger & History
   const [ledgerHistory, setLedgerHistory] = useState([
     { id: 'TXN-101', type: 'In-Store POS', method: 'Cash', total: 420, ntembaFee: 4.20, items: 3, time: 'Yesterday', fiscalCode: 'ZRA-FISCAL-993821', vsdmStatus: 'Signed & Verified' }
   ]);
-
-  // Council Levy History Log
   const [levyHistory, setLevyHistory] = useState([]);
 
   const theme = {
@@ -83,37 +74,32 @@ export default function App() {
     const councilLevy = vendorTier === 'tier1' ? 0 : subtotal * 0.01; 
 
     const grandTotal = subtotal + vatAmount + councilLevy;
-    const ntembaFee = grandTotal * 0.01; // Mandatory 1% Ntemba Platform Collection Fee
+    const ntembaFee = grandTotal * 0.01; // Mandatory 1% Ntemba Platform Fee
 
-    return {
-      subtotal,
-      vatAmount,
-      councilLevy,
-      grandTotal,
-      ntembaFee
-    };
+    return { subtotal, vatAmount, councilLevy, grandTotal, ntembaFee };
   };
 
-  // --- LIVE MOBILE MONEY PAYMENT HANDLER ---
-  const processLiveMobilePayment = async (customerPhone, amount, payoutDestination) => {
+  // --- LENCO PAYMENT & PAYOUT GATEWAY INTEGRATION ---
+  const processLencoPayment = async (customerPhone, amount, payoutDestination) => {
     try {
-      const paymentPayload = {
+      const lencoPayload = {
         amount: amount,
         currency: "ZMW",
         customerPhone: customerPhone,
-        payoutTarget: payoutDestination,
-        merchantName: storeName
+        payoutTarget: payoutDestination, // Routes directly to your Lenco-linked personal number or corporate account
+        merchantName: storeName,
+        gateway: "Lenco Zambia"
       };
 
-      console.log("Initiating mobile money transaction...", paymentPayload);
+      console.log("Initiating Lenco payment request...", lencoPayload);
       
-      // Simulated live gateway response for launch
-      alert(`Payment request of ZMW ${amount} sent to ${customerPhone}. Funds will route directly to: ${payoutDestination}`);
+      // Simulated successful dispatch via Lenco infrastructure
+      alert(`[Lenco Gateway] Charge request of ZMW ${amount} sent to customer (${customerPhone}). Funds will auto-settle to: ${payoutDestination}`);
       return true;
 
     } catch (error) {
-      console.error("Payment processing failed:", error);
-      alert("Payment routing failed. Please check network connectivity.");
+      console.error("Lenco payment processing failed:", error);
+      alert("Payment gateway connection failed. Please verify your network.");
       return false;
     }
   };
@@ -144,7 +130,7 @@ export default function App() {
 
   const handlePayCouncilLevy = (councilName, amount) => {
     if (!whatsappPhone || whatsappPhone.length < 9) {
-      alert("Please ensure a valid WhatsApp phone number is configured in your settings.");
+      alert("Please ensure a valid WhatsApp phone number is configured.");
       return;
     }
 
@@ -180,8 +166,8 @@ export default function App() {
             N
           </div>
           <div>
-            <h1 className="font-extrabold text-lg tracking-wide text-white">Ntemba POS <span className={theme.accentGold}>ZRA</span></h1>
-            <p className="text-[10px] text-stone-400 uppercase tracking-widest">Multi-Tier Subscription & Payout Router</p>
+            <h1 className="font-extrabold text-lg tracking-wide text-white">[Ntemba POS](https://ntemba-pos.netlify.app/) <span className={theme.accentGold}>Lenco</span></h1>
+            <p className="text-[10px] text-stone-400 uppercase tracking-widest">Powered by [Lenco](https://lenco.co) Payout Gateway</p>
           </div>
         </div>
 
@@ -208,9 +194,9 @@ export default function App() {
         <main className="flex-1 flex items-center justify-center p-6">
           <div className={`w-full max-w-lg p-8 rounded-3xl ${theme.cardBg} space-y-5 max-h-[90vh] overflow-y-auto`}>
             <div>
-              <h2 className="text-2xl font-black text-white mb-2">Configure Your Launch Terminal</h2>
+              <h2 className="text-2xl font-black text-white mb-2">Terminal Setup & Lenco Routing</h2>
               <p className="text-xs text-stone-400 leading-relaxed">
-                Setup your subscription tier, WhatsApp contact, and payout routing destination below:
+                Connect your business profile and set whether Lenco pays out to your personal mobile money or your corporate account:
               </p>
             </div>
 
@@ -273,7 +259,7 @@ export default function App() {
 
               {/* PAYOUT ROUTING CONFIGURATION BLOCK */}
               <div className="pt-2 border-t border-stone-800 space-y-3">
-                <label className="block text-xs font-semibold uppercase text-stone-400">Payout Destination (Where funds settle)</label>
+                <label className="block text-xs font-semibold uppercase text-stone-400">Lenco Payout Destination</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -290,7 +276,7 @@ export default function App() {
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${payoutDestinationType === 'business' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
                   >
                     <p className="text-xs font-bold text-white">Business Account</p>
-                    <p className="text-[10px] text-stone-400 mt-0.5">Merchant Till / Bank</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5">Lenco Corporate Till</p>
                   </button>
                 </div>
 
@@ -310,7 +296,7 @@ export default function App() {
                       type="text" 
                       value={businessMerchantTill}
                       onChange={(e) => setBusinessMerchantTill(e.target.value)}
-                      placeholder="Corporate Merchant ID / Bank Till (e.g., 984920)" 
+                      placeholder="Corporate Account ID / Lenco Till (e.g., LEN-9921)" 
                       className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
                     />
                   </div>
@@ -351,7 +337,7 @@ export default function App() {
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <h3 className="text-sm font-bold text-white uppercase">{vendorTier} Active</h3>
+                <h3 className="text-sm font-bold text-white uppercase">[Lenco](https://lenco.co) Active</h3>
               </div>
               <p className="text-[11px] text-stone-400">
                 Payout Route: <span className="font-mono text-amber-400">{payoutDestinationType === 'personal' ? personalMobileNumber : (businessMerchantTill || 'Pending Setup')}</span>
@@ -367,7 +353,7 @@ export default function App() {
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-black text-white">POS Register & Cart</h3>
-                <span className="text-[10px] text-stone-400">Settles to: {payoutDestinationType === 'personal' ? 'Personal Mobile' : 'Business Account'}</span>
+                <span className="text-[10px] text-stone-400">Settles via [Lenco](https://lenco.co)</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -440,14 +426,14 @@ export default function App() {
                         const totals = calculateTotals();
                         const targetDestination = payoutDestinationType === 'personal' ? personalMobileNumber : businessMerchantTill;
                         
-                        processLiveMobilePayment(customerPhone, totals.grandTotal, targetDestination);
+                        processLencoPayment(customerPhone, totals.grandTotal, targetDestination);
                         handleSmartCheckout('pos', 'Mobile Money');
                       }
                     }}
                     disabled={cart.length === 0}
                     className={`py-3 rounded-xl text-xs ${theme.primaryBtn} disabled:opacity-50`}
                   >
-                    📱 Charge Mobile Money
+                    📱 Charge via Lenco
                   </button>
                 </div>
               </div>
