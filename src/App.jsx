@@ -6,7 +6,7 @@ export default function App() {
   const [userRole, setUserRole] = useState('storeowner'); // 'storeowner', 'customer', 'both'
   const [tpin, setTpin] = useState('');
   const [councilId, setCouncilId] = useState(''); // Local Council Levy ID
-  const [traderCategory, setTraderCategory] = useState('informal-exempt'); // 'informal-exempt', 'vat-registered'
+  const [vendorTier, setVendorTier] = useState('tier1'); // 'tier1' (Free), 'tier2' (K175/mo), 'tier3' (K850/mo)
   
   // Store / Trader Profile & Live Location Tracking
   const [isMobileTrader, setIsMobileTrader] = useState(false);
@@ -35,7 +35,7 @@ export default function App() {
 
   // Financial Ledger & ZRA Compliance History
   const [ledgerHistory, setLedgerHistory] = useState([
-    { id: 'TXN-101', type: 'In-Store POS', method: 'Cash', total: 420, items: 3, time: 'Yesterday', fiscalCode: 'ZRA-FISCAL-993821', vsdmStatus: 'Signed & Verified' }
+    { id: 'TXN-101', type: 'In-Store POS', method: 'Cash', total: 420, ntembaFee: 4.20, items: 3, time: 'Yesterday', fiscalCode: 'ZRA-FISCAL-993821', vsdmStatus: 'Signed & Verified' }
   ]);
 
   const theme = {
@@ -49,8 +49,8 @@ export default function App() {
 
   const handleSignupSubmit = (e) => {
     e.preventDefault();
-    if (!tpin || tpin.trim().length < 9) {
-      alert("Please enter a valid 10-digit ZRA TPIN number for fiscal authorization.");
+    if (vendorTier !== 'tier1' && (!tpin || tpin.trim().length < 9)) {
+      alert("Please enter a valid Company TPIN number for Tier 2 or Tier 3 registration.");
       return;
     }
     setView('app');
@@ -67,18 +67,23 @@ export default function App() {
 
   const calculateTotals = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    // Apply ZRA VAT calculation (16% standard) unless trader is informal zero-rated/council-exempt
-    const vatRate = traderCategory === 'vat-registered' ? 0.16 : 0;
+    // Apply ZRA VAT calculation (16% standard) for Tier 2 & 3, zero for Tier 1 informal
+    const vatRate = vendorTier === 'tier1' ? 0 : 0.16;
     const vatAmount = subtotal * vatRate;
     
-    // Local Council Levy (Small scale/informal traders are exempt or pay flat micro-levy)
-    const councilLevy = traderCategory === 'informal-exempt' ? 0 : subtotal * 0.01; 
+    // Local Council Levy (Exempt on Tier 1)
+    const councilLevy = vendorTier === 'tier1' ? 0 : subtotal * 0.01; 
+
+    const grandTotal = subtotal + vatAmount + councilLevy;
+    // Mandatory 1% Ntemba Platform Collection Fee across all tiers
+    const ntembaFee = grandTotal * 0.01;
 
     return {
       subtotal,
       vatAmount,
       councilLevy,
-      grandTotal: subtotal + vatAmount + councilLevy
+      grandTotal,
+      ntembaFee
     };
   };
 
@@ -94,10 +99,11 @@ export default function App() {
       subtotal: totals.subtotal,
       vat: totals.vatAmount,
       levy: totals.councilLevy,
+      ntembaFee: totals.ntembaFee,
       items: cart.reduce((sum, i) => sum + i.qty, 0),
       time: 'Just now',
       fiscalCode: fiscalSig,
-      vsdmStatus: 'ZRA E-Invoiced & Signed'
+      vsdmStatus: vendorTier === 'tier1' ? 'Logged & Fee Deducted' : 'ZRA E-Invoiced & Signed'
     };
 
     setLedgerHistory([newTxn, ...ledgerHistory]);
@@ -116,7 +122,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="font-extrabold text-lg tracking-wide text-white">NTEMBA <span className={theme.accentGold}>POS ZRA</span></h1>
-            <p className="text-[10px] text-stone-400 uppercase tracking-widest">Smart Invoicing & Council Levy Engine</p>
+            <p className="text-[10px] text-stone-400 uppercase tracking-widest">Multi-Tier Subscription & Smart Invoicing</p>
           </div>
         </div>
 
@@ -124,70 +130,95 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-white">{storeName}</p>
-              <p className="text-[10px] text-amber-400 font-mono">TPIN: {tpin} | {traderCategory === 'informal-exempt' ? 'Informal Zero-Tax' : 'VAT Reg.'}</p>
+              <p className="text-[10px] text-amber-400 font-mono uppercase">{vendorTier} | TPIN: {tpin || 'Exempt / Informal'}</p>
             </div>
             <button 
               onClick={() => setView('signup')}
               className="text-xs px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-stone-300 hover:text-white transition-all cursor-pointer"
             >
-              Config
+              Plans & Config
             </button>
           </div>
         )}
       </header>
 
-      {/* VIEW 1: SIGNUP & ZRA / COUNCIL REGISTRATION */}
+      {/* VIEW 1: SIGNUP & PRICING TIER SELECTION */}
       {view === 'signup' && (
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className={`w-full max-w-md p-8 rounded-3xl ${theme.cardBg} space-y-5`}>
+          <div className={`w-full max-w-lg p-8 rounded-3xl ${theme.cardBg} space-y-5`}>
             <div>
-              <h2 className="text-2xl font-black text-white mb-2">ZRA & Council Compliance Setup</h2>
+              <h2 className="text-2xl font-black text-white mb-2">Select Your Vendor Tier</h2>
               <p className="text-xs text-stone-400 leading-relaxed">
-                Configure your ZRA TPIN and tax classification to enable automated VSDM smart invoicing and council levy calculations.
+                All tiers include a mandatory 1% Ntemba collection fee per transaction. Choose your subscription level below:
               </p>
             </div>
 
             <form onSubmit={handleSignupSubmit} className="space-y-4">
+              
+              {/* TIER SELECTION CARDS */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVendorTier('tier1')}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${vendorTier === 'tier1' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
+                >
+                  <p className="text-xs font-bold text-white">Tier 1</p>
+                  <p className="text-[10px] text-amber-400 font-mono mt-0.5">Free / 0 ZMW</p>
+                  <p className="text-[9px] text-stone-400 mt-1">Informal / Micro</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setVendorTier('tier2')}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${vendorTier === 'tier2' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
+                >
+                  <p className="text-xs font-bold text-white">Tier 2</p>
+                  <p className="text-[10px] text-amber-400 font-mono mt-0.5">K175 / mo</p>
+                  <p className="text-[9px] text-stone-400 mt-1">Company TPIN</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setVendorTier('tier3')}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${vendorTier === 'tier3' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
+                >
+                  <p className="text-xs font-bold text-white">Tier 3</p>
+                  <p className="text-[10px] text-amber-400 font-mono mt-0.5">K850 / mo</p>
+                  <p className="text-[9px] text-stone-400 mt-1">Enterprise VSDM</p>
+                </button>
+              </div>
+
               <div>
-                <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">ZRA TPIN Number *</label>
+                <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Store / Business Name</label>
                 <input 
                   type="text" 
-                  value={tpin}
-                  onChange={(e) => setTpin(e.target.value)}
-                  placeholder="e.g., 1002938481" 
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  placeholder="e.g., Lusaka Central Hub" 
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 text-sm"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Local Council Levy / Market Permit ID (Optional)</label>
-                <input 
-                  type="text" 
-                  value={councilId}
-                  onChange={(e) => setCouncilId(e.target.value)}
-                  placeholder="e.g., LCC-MKT-2026-449" 
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Trader Tax Classification</label>
-                <select 
-                  value={traderCategory} 
-                  onChange={(e) => setTraderCategory(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 text-sm cursor-pointer"
-                >
-                  <option value="informal-exempt">Informal / Micro Trader (Zero Council Levy & Tax Exempt)</option>
-                  <option value="vat-registered">VAT Registered Enterprise (16% Standard + Local Levy)</option>
-                </select>
-              </div>
+              {vendorTier !== 'tier1' && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Company TPIN Number (Required for {vendorTier.toUpperCase()})</label>
+                  <input 
+                    type="text" 
+                    value={tpin}
+                    onChange={(e) => setTpin(e.target.value)}
+                    placeholder="e.g., 1002938481" 
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                    required
+                  />
+                </div>
+              )}
 
               <button 
                 type="submit" 
                 className={`w-full py-3.5 rounded-xl uppercase tracking-wider text-xs ${theme.primaryBtn} mt-4`}
               >
-                Initialize Compliant Terminal
+                Launch {vendorTier.toUpperCase()} Terminal
               </button>
             </form>
           </div>
@@ -198,28 +229,28 @@ export default function App() {
       {view === 'app' && (
         <main className="flex-1 pb-28 px-4 pt-4 max-w-2xl mx-auto w-full space-y-4">
           
-          {/* COMPLIANCE STATUS BADGE BAR */}
+          {/* SUBSCRIPTION STATUS BAR */}
           <div className={`p-4 rounded-2xl ${theme.cardBg} flex justify-between items-center`}>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <h3 className="text-sm font-bold text-white">ZRA Smart Invoice & VSDM Active</h3>
+                <h3 className="text-sm font-bold text-white uppercase">{vendorTier} Active Subscription</h3>
               </div>
               <p className="text-[11px] text-stone-400">
-                {traderCategory === 'informal-exempt' ? 'Micro-Trader Exempt Status: 0% Tax / Zero Council Levy Applied' : 'Standard Commercial Tax Profile Active'}
+                {vendorTier === 'tier1' ? 'Free Plan: 0 ZMW/mo + 1% Ntemba transaction fee' : vendorTier === 'tier2' ? 'Growth Plan: K175/mo + Company TPIN' : 'Enterprise Plan: K850/mo + VSDM Smart Sync'}
               </p>
             </div>
             <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl">
-              TPIN Verified
+              1% Fee Active
             </span>
           </div>
 
-          {/* TAB 1: POS & SMART INVOICING REGISTER */}
+          {/* TAB 1: POS & REGISTER */}
           {activeBottomTab === 'sales' && (
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-black text-white">POS Register & Smart Invoice Cart</h3>
-                <span className="text-[10px] text-stone-400">Generates ZRA-compliant fiscal codes</span>
+                <h3 className="text-sm font-black text-white">POS Register & Cart</h3>
+                <span className="text-[10px] text-stone-400">1% Ntemba collection fee applies automatically</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -230,18 +261,15 @@ export default function App() {
                     className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl text-left hover:border-amber-500/50 transition-all cursor-pointer"
                   >
                     <p className="text-xs font-bold text-white truncate">{prod.name}</p>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-xs text-amber-400 font-mono">ZMW {prod.price}</p>
-                      {prod.zeroRated && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">Zero-Rated</span>}
-                    </div>
+                    <p className="text-xs text-amber-400 font-mono mt-1">ZMW {prod.price}</p>
                   </button>
                 ))}
               </div>
 
               <div className="border-t border-stone-800 pt-3 space-y-3">
-                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider">Current Bill Breakdown</h4>
+                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider">Transaction Summary</h4>
                 {cart.length === 0 ? (
-                  <p className="text-xs text-stone-500 italic py-2">Cart is empty. Select products from above.</p>
+                  <p className="text-xs text-stone-500 italic py-2">Cart is empty. Select items above.</p>
                 ) : (
                   <div className="space-y-1.5 text-xs text-stone-300">
                     {cart.map((item, index) => (
@@ -256,16 +284,24 @@ export default function App() {
                         <span>Subtotal:</span>
                         <span>ZMW {calculateTotals().subtotal}</span>
                       </div>
-                      <div className="flex justify-between text-stone-400">
-                        <span>ZRA VAT (16%):</span>
-                        <span>ZMW {calculateTotals().vatAmount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-stone-400">
-                        <span>Council Levy:</span>
-                        <span>ZMW {calculateTotals().councilLevy.toFixed(2)}</span>
+                      {vendorTier !== 'tier1' && (
+                        <>
+                          <div className="flex justify-between text-stone-400">
+                            <span>ZRA VAT (16%):</span>
+                            <span>ZMW {calculateTotals().vatAmount.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-stone-400">
+                            <span>Council Levy:</span>
+                            <span>ZMW {calculateTotals().councilLevy.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between text-amber-400/80">
+                        <span>Ntemba Fee (1%):</span>
+                        <span>ZMW {calculateTotals().ntembaFee.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-black text-white pt-1 border-t border-stone-800">
-                        <span>Total Due:</span>
+                        <span>Grand Total:</span>
                         <span className="text-amber-400">ZMW {calculateTotals().grandTotal.toFixed(2)}</span>
                       </div>
                     </div>
@@ -276,82 +312,57 @@ export default function App() {
                   <button 
                     onClick={() => handleSmartCheckout('pos', 'Cash')}
                     disabled={cart.length === 0}
-                    py-3="true"
                     className="py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs border border-stone-700 disabled:opacity-50 cursor-pointer"
                   >
-                    💵 Cash (Fiscalized)
+                    💵 Cash Tendered
                   </button>
                   <button 
                     onClick={() => handleSmartCheckout('pos', 'Mobile Money')}
                     disabled={cart.length === 0}
                     className={`py-3 rounded-xl text-xs ${theme.primaryBtn} disabled:opacity-50`}
                   >
-                    📱 Mobile Money (E-Invoice)
+                    📱 Mobile Money
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: INVENTORY & TAX CATEGORIES */}
+          {/* TAB 2: INVENTORY */}
           {activeBottomTab === 'inventory' && (
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-sm font-black text-white">Catalog & ZRA Tax Classification</h3>
-                  <p className="text-[11px] text-stone-400">Manage item inventory and zero-rated exemption statuses.</p>
-                </div>
-              </div>
-
+              <h3 className="text-sm font-black text-white">Catalog Management</h3>
               <div className="space-y-2">
                 {inventory.map(item => (
-                  <div key={item.id} className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl flex justify-between items-center">
+                  <div key={item.id} className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl flex justify-between items-center text-xs">
                     <div>
-                      <p className="text-xs font-bold text-white">{item.name}</p>
-                      <p className="text-[11px] text-stone-400 font-mono">ZMW {item.price} | Stock: {item.stock}</p>
+                      <p className="font-bold text-white">{item.name}</p>
+                      <p className="text-stone-400 font-mono">ZMW {item.price} | Stock: {item.stock}</p>
                     </div>
-                    <span className={`text-[10px] px-2 py-1 rounded-lg font-bold ${item.zeroRated ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-stone-800 text-stone-300'}`}>
-                      {item.zeroRated ? 'Zero-Rated / Exempt' : 'Standard VAT'}
-                    </span>
+                    <span className="text-amber-400 font-mono">Active</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* TAB 3: REPORTS & LEDGER HISTORY */}
+          {/* TAB 3: REPORTS & LEDGER */}
           {activeBottomTab === 'reports' && (
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
-              <h3 className="text-sm font-black text-white">Fiscal Ledger & Tax Audit Trail</h3>
+              <h3 className="text-sm font-black text-white">Financial Ledger & 1% Collection Track</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4 rounded-xl bg-stone-950/60 border border-stone-800">
-                  <p className="text-[10px] uppercase text-stone-400">Total Fiscal Revenue</p>
+                  <p className="text-[10px] uppercase text-stone-400">Recorded Revenue</p>
                   <p className="text-lg font-black text-amber-400 mt-1 font-mono">
                     ZMW {ledgerHistory.reduce((sum, t) => sum + t.total, 0).toFixed(2)}
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-stone-950/60 border border-stone-800">
-                  <p className="text-[10px] uppercase text-stone-400">Signed Invoices</p>
-                  <p className="text-lg font-black text-white mt-1 font-mono">{ledgerHistory.length} Logged</p>
+                  <p className="text-[10px] uppercase text-stone-400">Ntemba 1% Fees Collected</p>
+                  <p className="text-lg font-black text-white mt-1 font-mono">
+                    ZMW {ledgerHistory.reduce((sum, t) => sum + t.ntembaFee, 0).toFixed(2)}
+                  </p>
                 </div>
-              </div>
-
-              <div className="border-t border-stone-800 pt-3 space-y-2">
-                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider">Audit Log</h4>
-                {ledgerHistory.map(txn => (
-                  <div key={txn.id} className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl flex justify-between items-center text-xs">
-                    <div>
-                      <p className="font-bold text-white">{txn.type} — <span className="text-amber-400 font-mono">ZMW {txn.total.toFixed(2)}</span></p>
-                      <p className="text-[10px] text-stone-400 font-mono">{txn.fiscalCode} | {txn.vsdmStatus}</p>
-                    </div>
-                    <button 
-                      onClick={() => setActiveSmartInvoice(txn)}
-                      className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-lg text-[10px] cursor-pointer"
-                    >
-                      View Invoice
-                    </button>
-                  </div>
-                ))}
               </div>
             </div>
           )}
@@ -359,68 +370,54 @@ export default function App() {
         </main>
       )}
 
-      {/* SMART INVOICE RECEIPT MODAL */}
+      {/* INVOICE MODAL */}
       {activeSmartInvoice && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className={`w-full max-w-sm p-6 rounded-3xl ${theme.cardBg} space-y-4 font-mono text-xs`}>
             <div className="text-center space-y-1 border-b border-stone-800 pb-3">
               <h3 className="font-black text-sm text-white font-sans">{storeName}</h3>
-              <p className="text-[10px] text-stone-400">ZRA TPIN: {tpin}</p>
-              <p className="text-[10px] text-amber-400">OFFICIAL VSDM SMART E-INVOICE</p>
+              <p className="text-[10px] text-stone-400">TPIN: {tpin || 'Informal Trader'}</p>
+              <p className="text-[10px] text-amber-400 uppercase">{vendorTier} RECEIPT</p>
             </div>
 
             <div className="space-y-1 text-stone-300">
               <div className="flex justify-between">
-                <span>Receipt Ref:</span>
+                <span>Ref ID:</span>
                 <span className="text-white">{activeSmartInvoice.id}</span>
               </div>
               <div className="flex justify-between">
                 <span>Payment:</span>
                 <span>{activeSmartInvoice.method}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Timestamp:</span>
-                <span>{activeSmartInvoice.time}</span>
-              </div>
             </div>
 
             <div className="border-t border-b border-stone-800 py-2 space-y-1 text-stone-300">
-              <div className="flex justify-between text-stone-400 text-[10px] uppercase">
-                <span>Description</span>
-                <span>Amount</span>
-              </div>
               <div className="flex justify-between">
-                <span>Total Items ({activeSmartInvoice.items})</span>
+                <span>Subtotal:</span>
                 <span>ZMW {activeSmartInvoice.subtotal}</span>
               </div>
-              <div className="flex justify-between text-stone-400">
-                <span>ZRA VAT (16%):</span>
-                <span>ZMW {activeSmartInvoice.vat.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-stone-400">
-                <span>Council Levy:</span>
-                <span>ZMW {activeSmartInvoice.levy.toFixed(2)}</span>
+              {vendorTier !== 'tier1' && (
+                <div className="flex justify-between text-stone-400">
+                  <span>VAT & Levy:</span>
+                  <span>ZMW {(activeSmartInvoice.vat + activeSmartInvoice.levy).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-amber-400">
+                <span>Ntemba Fee (1%):</span>
+                <span>ZMW {activeSmartInvoice.ntembaFee.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex justify-between text-sm font-bold text-white">
-              <span>Grand Total:</span>
+              <span>Total Paid:</span>
               <span className="text-amber-400">ZMW {activeSmartInvoice.total.toFixed(2)}</span>
-            </div>
-
-            <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-1 text-[10px] text-stone-400 text-center">
-              <p className="text-amber-400 font-bold">{activeSmartInvoice.fiscalCode}</p>
-              <p>Status: {activeSmartInvoice.vsdmStatus}</p>
-              <div className="w-20 h-20 bg-stone-800 mx-auto mt-2 rounded flex items-center justify-center text-[9px] text-stone-300">
-                [ ZRA QR CODE ]
-              </div>
             </div>
 
             <button 
               onClick={() => setActiveSmartInvoice(null)}
               className={`w-full py-3 rounded-xl text-xs font-sans ${theme.primaryBtn}`}
             >
-              Close & Print Receipt
+              Close Receipt
             </button>
           </div>
         </div>
@@ -434,7 +431,7 @@ export default function App() {
             className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'sales' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
           >
             <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">🛒</span>
-            <span className="text-[10px]">POS Register</span>
+            <span className="text-[10px]">POS</span>
           </button>
 
           <button 
@@ -442,7 +439,7 @@ export default function App() {
             className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'inventory' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
           >
             <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">📦</span>
-            <span className="text-[10px]">Tax Catalog</span>
+            <span className="text-[10px]">Catalog</span>
           </button>
 
           <button 
@@ -450,7 +447,7 @@ export default function App() {
             className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'reports' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
           >
             <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">📊</span>
-            <span className="text-[10px]">Fiscal Ledger</span>
+            <span className="text-[10px]">Ledger</span>
           </button>
         </nav>
       )}
