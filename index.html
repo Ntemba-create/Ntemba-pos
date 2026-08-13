@@ -5,9 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ntemba POS</title>
+    <!-- Modern Tailwind styling engine for vibrant app colors and touch buttons -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="bg-slate-950 flex items-center justify-center min-h-screen m-0">
+    <div id="root" class="w-full max-w-md h-screen md:h-[88vh] md:max-w-4xl md:rounded-2xl shadow-2xl overflow-hidden bg-slate-50 flex flex-col"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
