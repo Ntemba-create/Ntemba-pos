@@ -11,6 +11,11 @@ export default function App() {
   // Shared Mobile & WhatsApp Contact State (Unified across POS & Council Levies)
   const [whatsappPhone, setWhatsappPhone] = useState('260971234567');
   
+  // Payout Destination States (Personal Mobile vs Corporate Business Account)
+  const [payoutDestinationType, setPayoutDestinationType] = useState('personal'); // 'personal' or 'business'
+  const [personalMobileNumber, setPersonalMobileNumber] = useState('260971234567');
+  const [businessMerchantTill, setBusinessMerchantTill] = useState('');
+
   // Store / Trader Profile & Live Location Tracking
   const [isMobileTrader, setIsMobileTrader] = useState(false);
   const [currentLocation, setIsMobileTraderLocation] = useState({ lat: -15.3875, lng: 28.3228 });
@@ -160,7 +165,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-white">{storeName}</p>
-              <p className="text-[10px] text-amber-400 font-mono uppercase">{vendorTier} | TPIN: {tpin || 'Informal'}</p>
+              <p className="text-[10px] text-amber-400 font-mono uppercase">{vendorTier} | Payout: {payoutDestinationType === 'personal' ? personalMobileNumber : businessMerchantTill || 'Corporate'}</p>
             </div>
             <button 
               onClick={() => setView('signup')}
@@ -175,11 +180,11 @@ export default function App() {
       {/* VIEW 1: SIGNUP & PRICING TIER SELECTION */}
       {view === 'signup' && (
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className={`w-full max-w-lg p-8 rounded-3xl ${theme.cardBg} space-y-5`}>
+          <div className={`w-full max-w-lg p-8 rounded-3xl ${theme.cardBg} space-y-5 max-h-[90vh] overflow-y-auto`}>
             <div>
-              <h2 className="text-2xl font-black text-white mb-2">Select Your Vendor Tier</h2>
+              <h2 className="text-2xl font-black text-white mb-2">Configure Your Terminal</h2>
               <p className="text-xs text-stone-400 leading-relaxed">
-                All tiers include a mandatory 1% Ntemba collection fee per transaction. Choose your subscription level below:
+                Select your vendor tier, payout destination, and WhatsApp notification info below:
               </p>
             </div>
 
@@ -240,6 +245,52 @@ export default function App() {
                 />
               </div>
 
+              {/* PAYOUT ROUTING CONFIGURATION BLOCK */}
+              <div className="pt-2 border-t border-stone-800 space-y-3">
+                <label className="block text-xs font-semibold uppercase text-stone-400">Payout Destination</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayoutDestinationType('personal')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${payoutDestinationType === 'personal' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
+                  >
+                    <p className="text-xs font-bold text-white">Personal Mobile</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5">Airtel/MTN/Zamtel</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPayoutDestinationType('business')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${payoutDestinationType === 'business' ? 'border-amber-400 bg-amber-500/10' : 'border-stone-800 bg-stone-950'}`}
+                  >
+                    <p className="text-xs font-bold text-white">Business Account</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5">Merchant Till / Bank</p>
+                  </button>
+                </div>
+
+                {payoutDestinationType === 'personal' ? (
+                  <div>
+                    <input 
+                      type="text" 
+                      value={personalMobileNumber}
+                      onChange={(e) => setPersonalMobileNumber(e.target.value)}
+                      placeholder="Personal Mobile Money (e.g., 260971234567)" 
+                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <input 
+                      type="text" 
+                      value={businessMerchantTill}
+                      onChange={(e) => setBusinessMerchantTill(e.target.value)}
+                      placeholder="Corporate Merchant ID / Bank Till (e.g., 984920)" 
+                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
               {vendorTier !== 'tier1' && (
                 <div>
                   <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Company TPIN Number (Required for {vendorTier.toUpperCase()})</label>
@@ -269,15 +320,15 @@ export default function App() {
       {view === 'app' && (
         <main className="flex-1 pb-28 px-4 pt-4 max-w-2xl mx-auto w-full space-y-4">
           
-          {/* SUBSCRIPTION STATUS BAR */}
+          {/* SUBSCRIPTION & PAYOUT STATUS BAR */}
           <div className={`p-4 rounded-2xl ${theme.cardBg} flex justify-between items-center`}>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <h3 className="text-sm font-bold text-white uppercase">{vendorTier} Active Subscription</h3>
+                <h3 className="text-sm font-bold text-white uppercase">{vendorTier} Active</h3>
               </div>
               <p className="text-[11px] text-stone-400">
-                WhatsApp Linked: <span className="font-mono text-amber-400">{whatsappPhone}</span>
+                Payout Route: <span className="font-mono text-amber-400">{payoutDestinationType === 'personal' ? personalMobileNumber : (businessMerchantTill || 'Pending Setup')}</span>
               </p>
             </div>
             <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl">
@@ -290,7 +341,7 @@ export default function App() {
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-black text-white">POS Register & Cart</h3>
-                <span className="text-[10px] text-stone-400">1% Ntemba collection fee applies automatically</span>
+                <span className="text-[10px] text-stone-400">Settles to: {payoutDestinationType === 'personal' ? 'Personal Mobile' : 'Business Account'}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
