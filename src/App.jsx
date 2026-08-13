@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('pos'); // 'pos', 'delivery', 'invoices', 'market', 'council', 'ledger'
+  const [activeTab, setActiveTab] = useState('pos'); // 'pos', 'delivery', 'invoices', 'market', 'council', 'ledger', 'hr'
   const [tier, setTier] = useState('tier1'); // 'tier1', 'tier2', 'tier3'
   const [storeName, setStoreName] = useState('Ntemba General Store');
   const [whatsAppNumber, setWhatsAppNumber] = useState('+260970000000');
@@ -12,6 +12,15 @@ export default function App() {
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemUnit, setNewItemUnit] = useState('units'); // 'units', 'kg', 'liters', 'meda'
   const [newItemStock, setNewItemStock] = useState('');
+
+  // Zambian HR & Payroll State (Tier 3 Exclusive)
+  const [employees, setEmployees] = useState([
+    { id: 1, name: 'Chanda Mulenga', role: 'Store Cashier', gross: 4500, napsa: 225, paye: 320, nhima: 135, net: 3820 }
+  ]);
+  const [newEmpName, setNewEmpName] = useState('');
+  const [newEmpRole, setNewEmpRole] = useState('');
+  const [newEmpGross, setNewEmpGross] = useState('');
+  const [selectedPayslip, setSelectedPayslip] = useState(null);
 
   const [catalog, setCatalog] = useState([
     { id: 1, name: 'Roller Mealie Meal (25kg)', price: 210, stock: 14, unit: 'bags', category: 'Groceries' },
@@ -57,6 +66,48 @@ export default function App() {
     setNewItemPrice('');
     setNewItemStock('');
     alert(`Successfully added ${item.name} (${item.unit}) to inventory!`);
+  };
+
+  // Zambian Statutory Payroll Calculation (NAPSA 5%, NHIMA 1%, PAYE bracket approximation)
+  const handleAddEmployee = (e) => {
+    e.preventDefault();
+    if (tier !== 'tier3') {
+      alert("HR Payroll and statutory payslips are exclusive to Tier 3 Enterprise.");
+      return;
+    }
+    if (!newEmpName || !newEmpGross) return;
+
+    const gross = parseFloat(newEmpGross);
+    const napsa = gross * 0.05; // 5% employee NAPSA contribution
+    const nhima = gross * 0.01; // 1% NHIMA contribution
+    
+    let paye = 0;
+    if (gross > 5100) {
+      paye = (gross - 5100) * 0.25 + 250;
+    } else if (gross > 4100) {
+      paye = (gross - 4100) * 0.20;
+    } else {
+      paye = 0;
+    }
+
+    const net = gross - (napsa + nhima + paye);
+
+    const emp = {
+      id: Date.now(),
+      name: newEmpName,
+      role: newEmpRole || 'Staff Member',
+      gross: gross,
+      napsa: parseFloat(napsa.toFixed(2)),
+      paye: parseFloat(paye.toFixed(2)),
+      nhima: parseFloat(nhima.toFixed(2)),
+      net: parseFloat(net.toFixed(2))
+    };
+
+    setEmployees([...employees, emp]);
+    setNewEmpName('');
+    setNewEmpRole('');
+    setNewEmpGross('');
+    alert(`Employee ${emp.name} added. Statutory NAPSA, NHIMA, and PAYE calculated.`);
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
@@ -112,7 +163,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 font-sans flex flex-col justify-between p-4 sm:p-6">
       
-      {/* SCREEN-ADJUSTING CONTAINER: max-w-md for mobile/tier1, expands to max-w-6xl for desktop enterprise Tiers 2 & 3 */}
+      {/* SCREEN-ADJUSTING CONTAINER */}
       <div className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 ${tier !== 'tier1' ? 'max-w-6xl' : 'max-w-md'}`}>
         
         {/* HEADER */}
@@ -127,7 +178,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* TIER SELECTOR & DESKTOP SWITCH */}
+          {/* TIER SELECTOR */}
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase font-bold text-stone-400">Compliance Tier:</span>
             <button onClick={() => setTier('tier1')} className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${tier === 'tier1' ? 'bg-amber-500 text-stone-950' : 'bg-stone-950 text-stone-400 border border-stone-800'}`}>
@@ -137,17 +188,17 @@ export default function App() {
               Tier 2
             </button>
             <button onClick={() => setTier('tier3')} className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${tier === 'tier3' ? 'bg-amber-500 text-stone-950' : 'bg-stone-950 text-stone-400 border border-stone-800'}`}>
-              Tier 3
+              Tier 3 (Enterprise + HR)
             </button>
           </div>
         </header>
 
-        {/* ENTERPRISE MULTI-STORE BANNER (Active on Tiers 2 & 3 Desktop Views) */}
+        {/* ENTERPRISE MULTI-STORE BANNER */}
         {tier !== 'tier1' && (
           <div className="hidden md:flex justify-between items-center bg-stone-900/60 border border-amber-500/30 p-4 rounded-2xl mb-4 text-xs">
             <div>
-              <span className="font-black text-amber-400 uppercase tracking-wider">Enterprise Multi-Store Mode Active:</span>
-              <span className="text-stone-300 ml-2">Managing inventory matrix and regional audits across branches.</span>
+              <span className="font-black text-amber-400 uppercase tracking-wider">Enterprise Mode Active ({tier.toUpperCase()})</span>
+              <span className="text-stone-300 ml-2">Multi-branch matrix, statutory tax tables & audit reporting enabled.</span>
             </div>
             <div className="flex items-center gap-2 font-mono text-stone-400">
               <span>Branch Hub: <strong className="text-white">Soweto Main Market</strong></span>
@@ -156,7 +207,7 @@ export default function App() {
         )}
 
         {/* NAVIGATION TABS */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
+        <div className={`grid gap-2 mb-6 ${tier === 'tier3' ? 'grid-cols-3 sm:grid-cols-7' : 'grid-cols-3 sm:grid-cols-6'}`}>
           <button onClick={() => setActiveTab('pos')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'pos' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-stone-900 text-stone-400 border border-stone-800'}`}>
             🛒 POS
           </button>
@@ -175,16 +226,19 @@ export default function App() {
           <button onClick={() => setActiveTab('ledger')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'ledger' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-stone-900 text-stone-400 border border-stone-800'}`}>
             📊 Ledger
           </button>
+          {tier === 'tier3' && (
+            <button onClick={() => setActiveTab('hr')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer col-span-3 sm:col-span-1 ${activeTab === 'hr' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-stone-900 text-amber-400/70 border border-amber-500/20'}`}>
+              👥 HR & Payslips
+            </button>
+          )}
         </div>
 
         <div className="space-y-6 flex-1 w-full">
           
-          {/* POS & INVENTORY TAB WITH LITERS, KG, & MEDA */}
+          {/* POS TAB */}
           {activeTab === 'pos' && (
             <div className={`grid gap-6 ${tier !== 'tier1' ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-              
               <div className="space-y-6">
-                {/* Quick Catalog */}
                 <div className="p-4 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-3">
                   <h3 className="text-xs font-black uppercase tracking-wider text-stone-400">Inventory Catalog & Marketeer Meda</h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -203,7 +257,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Add Custom Inventory Item (Liters, Kg, Meda) */}
                 <form onSubmit={handleAddCatalogItem} className="p-4 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-3">
                   <h3 className="text-xs font-black uppercase tracking-wider text-stone-400">Add Stock / Meda Item</h3>
                   <div className="space-y-2">
@@ -240,7 +293,6 @@ export default function App() {
                 </form>
               </div>
 
-              {/* Active Cart */}
               <div className="p-4 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-4 flex flex-col justify-between">
                 <div className="space-y-4">
                   <h3 className="text-xs font-black uppercase tracking-wider text-stone-400">Active Cart Register</h3>
@@ -292,8 +344,86 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
               </div>
+            </div>
+          )}
+
+          {/* ZAMBIAN HR & PAYSLIPS TAB (TIER 3 EXCLUSIVE) */}
+          {activeTab === 'hr' && (
+            <div className="p-6 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-6 max-w-4xl mx-auto w-full">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-400">Zambian Compliant HR & Payroll</h3>
+                  <p className="text-[11px] text-stone-400">Automated NAPSA (5%), NHIMA (1%), and ZRA PAYE statutory calculations.</p>
+                </div>
+                {tier !== 'tier3' && (
+                  <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold rounded-xl">
+                    Locked: Upgrade to Tier 3 Required
+                  </span>
+                )}
+              </div>
+
+              {tier === 'tier3' ? (
+                <div className="grid gap-6 md:grid-cols-3">
+                  <form onSubmit={handleAddEmployee} className="p-4 bg-stone-950 border border-stone-800 rounded-2xl space-y-3 md:col-span-1">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Add Employee</h4>
+                    <div className="space-y-2">
+                      <input 
+                        type="text" 
+                        placeholder="Full Name" 
+                        value={newEmpName}
+                        onChange={(e) => setNewEmpName(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white text-xs"
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Role (e.g. Sales Cashier)" 
+                        value={newEmpRole}
+                        onChange={(e) => setNewEmpRole(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white text-xs"
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="Gross Salary (ZMW)" 
+                        value={newEmpGross}
+                        onChange={(e) => setNewEmpGross(e.target.value)}
+                        className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-white text-xs font-mono"
+                      />
+                      <button type="submit" className="w-full py-2.5 bg-amber-500 text-stone-950 font-bold rounded-xl text-xs cursor-pointer">
+                        Calculate & Save Payroll
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="space-y-3 md:col-span-2">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Staff Directory & Statutory Deductions</h4>
+                    <div className="space-y-2 max-h-72 overflow-y-auto">
+                      {employees.map(emp => (
+                        <div key={emp.id} className="flex justify-between items-center bg-stone-950 p-3 rounded-2xl border border-stone-800 text-xs">
+                          <div>
+                            <p className="font-bold text-white">{emp.name}</p>
+                            <p className="text-[10px] text-stone-400">{emp.role} • Gross: ZMW {emp.gross}</p>
+                            <p className="text-[9px] text-amber-400 font-mono mt-1">NAPSA: ZMW {emp.napsa} | NHIMA: ZMW {emp.nhima} | PAYE: ZMW {emp.paye}</p>
+                          </div>
+                          <div className="text-right flex flex-col items-end gap-2">
+                            <div>
+                              <span className="text-[9px] text-stone-400 block">Net Pay</span>
+                              <span className="font-mono text-emerald-400 font-bold">ZMW {emp.net}</span>
+                            </div>
+                            <button onClick={() => setSelectedPayslip(emp)} className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-amber-400 font-bold rounded-lg text-[10px] border border-stone-700 cursor-pointer">
+                              📄 View Payslip
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-stone-950 border border-stone-800 rounded-2xl space-y-3">
+                  <p className="text-xs text-stone-400">Switch your compliance tier at the top header to **Tier 3** to unlock Zambian statutory HR tools, automated payroll deductions, and printable payslips.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -320,7 +450,7 @@ export default function App() {
             </div>
           )}
 
-          {/* E-COMMERCE & SMART INVOICING TAB */}
+          {/* SMART INVOICING TAB */}
           {activeTab === 'invoices' && (
             <div className="p-6 bg-stone-900/90 border border-stone-800 rounded-3xl space-y-4 max-w-xl mx-auto w-full">
               <div>
@@ -422,6 +552,44 @@ export default function App() {
           )}
 
         </div>
+
+        {/* PAYSLIP MODAL */}
+        {selectedPayslip && (
+          <div className="fixed inset-0 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl font-mono">
+              <div className="text-center space-y-1">
+                <h3 className="text-sm font-black text-white">{storeName}</h3>
+                <p className="text-[10px] text-amber-400">Statutory Payslip • Zambia</p>
+                <p className="text-[9px] text-stone-400">Employee: {selectedPayslip.name} ({selectedPayslip.role})</p>
+              </div>
+              <div className="space-y-2 border-t border-b border-stone-800 py-3 text-xs">
+                <div className="flex justify-between text-stone-300">
+                  <span>Gross Salary:</span>
+                  <span>ZMW {selectedPayslip.gross}</span>
+                </div>
+                <div className="flex justify-between text-stone-400">
+                  <span>NAPSA (5%):</span>
+                  <span>- ZMW {selectedPayslip.napsa}</span>
+                </div>
+                <div className="flex justify-between text-stone-400">
+                  <span>NHIMA (1%):</span>
+                  <span>- ZMW {selectedPayslip.nhima}</span>
+                </div>
+                <div className="flex justify-between text-stone-400">
+                  <span>ZRA PAYE:</span>
+                  <span>- ZMW {selectedPayslip.paye}</span>
+                </div>
+              </div>
+              <div className="flex justify-between text-xs font-black text-emerald-400">
+                <span>Net Pay:</span>
+                <span>ZMW {selectedPayslip.net}</span>
+              </div>
+              <button onClick={() => setSelectedPayslip(null)} className="w-full py-3 bg-amber-500 text-stone-950 font-bold rounded-xl text-xs cursor-pointer">
+                Close Payslip
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* RECEIPT MODAL */}
         {showReceiptModal && lastReceipt && (
