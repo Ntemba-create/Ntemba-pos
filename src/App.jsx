@@ -93,11 +93,52 @@ export default function App() {
   };
 
   const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const backgroundFee = total * 0.01; // 1% built-in platform fee calculated seamlessly in background
+  const backgroundFee = total * 0.01; 
   const reportMonthsAllowed = getReportMonths(selectedTier);
   const filteredSuggestions = recentCustomSales.filter(s => 
     customItemName && s.name.toLowerCase().includes(customItemName.toLowerCase())
   );
+
+  // Thermal WhatsApp Receipt Generator
+  const sendWhatsAppReceipt = () => {
+    if (cart.length === 0) {
+      alert("Cart is empty! Add items before sending a receipt.");
+      return;
+    }
+
+    const dateTime = new Date().toLocaleString();
+    let receiptText = ````text
+================================
+          NTEMBA POS            
+================================
+📞 Tel: +260 97 0000000          
+📧 Email: support@ntemba.com     
+📍 Loc: Lusaka Central, Zambia  
+--------------------------------
+Date: ${dateTime}
+Cashier: ${username}
+Tier: ${selectedTier}
+--------------------------------
+QTY/UNIT   ITEM          TOTAL  
+--------------------------------\n`;
+
+    cart.forEach(item => {
+      const lineTotal = (item.price * item.qty).toFixed(2);
+      const qtyStr = `${item.qty}${item.unit === 'units' ? 'pcs' : item.unit}`;
+      receiptText += `${qtyStr.padEnd(10)} ${item.name.substring(0, 12).padEnd(12)} ZMW${lineTotal}\n`;
+    });
+
+    receiptText += `--------------------------------
+TOTAL DUE:              ZMW ${total.toFixed(2)}
+--------------------------------
+     THANK YOU FOR SHOPPING!     
+    Powered by Ntemba POS       
+================================````;
+
+    // Open WhatsApp Web with the thermal pre-formatted receipt string
+    const encodedUri = encodeURIComponent(receiptText);
+    window.open(`https://api.whatsapp.com/send?text=${encodedUri}`, '_blank');
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-slate-950 select-none overflow-hidden font-sans">
@@ -347,9 +388,15 @@ export default function App() {
                     <span>Total Due</span>
                     <span className="text-indigo-600 text-base">ZMW {total.toFixed(2)}</span>
                   </div>
-                  <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully! (1% Platform Fee of ZMW ${backgroundFee.toFixed(2)} recorded in backend ledger)`); setCart([]); }} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md">
-                    Charge ZMW {total.toFixed(2)}
-                  </button>
+                  
+                  <div className="flex gap-2">
+                    <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully! (1% Platform Fee of ZMW ${backgroundFee.toFixed(2)} recorded in backend ledger)`); setCart([]); }} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md">
+                      Charge ZMW {total.toFixed(2)}
+                    </button>
+                    <button onClick={sendWhatsAppReceipt} className="px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md flex items-center gap-1.5">
+                      <span>💬 Send Thermal WhatsApp Receipt</span>
+                    </button>
+                  </div>
                 </div>
 
               </div>
