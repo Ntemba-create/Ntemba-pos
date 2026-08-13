@@ -8,6 +8,9 @@ export default function App() {
   const [councilId, setCouncilId] = useState(''); // Local Council Levy ID
   const [vendorTier, setVendorTier] = useState('tier1'); // 'tier1' (Free), 'tier2' (K175/mo), 'tier3' (K850/mo)
   
+  // Shared Mobile & WhatsApp Contact State (Unified across POS & Council Levies)
+  const [whatsappPhone, setWhatsappPhone] = useState('260971234567');
+  
   // Store / Trader Profile & Live Location Tracking
   const [isMobileTrader, setIsMobileTrader] = useState(false);
   const [currentLocation, setIsMobileTraderLocation] = useState({ lat: -15.3875, lng: 28.3228 });
@@ -38,6 +41,9 @@ export default function App() {
     { id: 'TXN-101', type: 'In-Store POS', method: 'Cash', total: 420, ntembaFee: 4.20, items: 3, time: 'Yesterday', fiscalCode: 'ZRA-FISCAL-993821', vsdmStatus: 'Signed & Verified' }
   ]);
 
+  // Council Levy History Log
+  const [levyHistory, setLevyHistory] = useState([]);
+
   const theme = {
     bg: 'bg-stone-950 text-stone-100',
     cardBg: 'bg-stone-900/90 border border-stone-800 shadow-2xl backdrop-blur-md',
@@ -67,16 +73,12 @@ export default function App() {
 
   const calculateTotals = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    // Apply ZRA VAT calculation (16% standard) for Tier 2 & 3, zero for Tier 1 informal
     const vatRate = vendorTier === 'tier1' ? 0 : 0.16;
     const vatAmount = subtotal * vatRate;
-    
-    // Local Council Levy (Exempt on Tier 1)
     const councilLevy = vendorTier === 'tier1' ? 0 : subtotal * 0.01; 
 
     const grandTotal = subtotal + vatAmount + councilLevy;
-    // Mandatory 1% Ntemba Platform Collection Fee across all tiers
-    const ntembaFee = grandTotal * 0.01;
+    const ntembaFee = grandTotal * 0.01; // Mandatory 1% Ntemba Platform Collection Fee
 
     return {
       subtotal,
@@ -111,6 +113,34 @@ export default function App() {
     setCart([]);
   };
 
+  const handlePayCouncilLevy = (councilName, amount) => {
+    if (!whatsappPhone || whatsappPhone.length < 9) {
+      alert("Please ensure a valid WhatsApp phone number is configured in your settings.");
+      return;
+    }
+
+    const levyReceipt = {
+      id: `LEV-${Math.floor(1000 + Math.random() * 9000)}`,
+      council: councilName,
+      amount: amount,
+      phone: whatsappPhone,
+      status: 'Sent to WhatsApp Successfully',
+      time: 'Just now'
+    };
+
+    setLevyHistory([levyReceipt, ...levyHistory]);
+    
+    const whatsappMessage = encodeURIComponent(
+      `✅ *OFFICIAL MUNICIPAL LEVY RECEIPT*\n` +
+      `Ref: ${levyReceipt.id}\n` +
+      `Council: ${levyReceipt.council}\n` +
+      `Amount Paid: ZMW ${levyReceipt.amount}\n` +
+      `Status: Verified & Active`
+    );
+    
+    window.open(`https://wa.me/${whatsappPhone}?text=${whatsappMessage}`, '_blank');
+  };
+
   return (
     <div className={`min-h-screen ${theme.bg} font-sans flex flex-col justify-between relative overflow-x-hidden`}>
       
@@ -121,7 +151,7 @@ export default function App() {
             N
           </div>
           <div>
-            <h1 className="font-extrabold text-lg tracking-wide text-white">NTEMBA <span className={theme.accentGold}>POS ZRA</span></h1>
+            <h1 className="font-extrabold text-lg tracking-wide text-white">[Ntemba POS](https://ntemba-pos.netlify.app/) <span className={theme.accentGold}>ZRA</span></h1>
             <p className="text-[10px] text-stone-400 uppercase tracking-widest">Multi-Tier Subscription & Smart Invoicing</p>
           </div>
         </div>
@@ -130,7 +160,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-white">{storeName}</p>
-              <p className="text-[10px] text-amber-400 font-mono uppercase">{vendorTier} | TPIN: {tpin || 'Exempt / Informal'}</p>
+              <p className="text-[10px] text-amber-400 font-mono uppercase">{vendorTier} | TPIN: {tpin || 'Informal'}</p>
             </div>
             <button 
               onClick={() => setView('signup')}
@@ -154,8 +184,6 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSignupSubmit} className="space-y-4">
-              
-              {/* TIER SELECTION CARDS */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -200,6 +228,18 @@ export default function App() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">WhatsApp Phone Number (For Council Receipts)</label>
+                <input 
+                  type="text" 
+                  value={whatsappPhone}
+                  onChange={(e) => setWhatsappPhone(e.target.value)}
+                  placeholder="e.g., 260971234567" 
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                  required
+                />
+              </div>
+
               {vendorTier !== 'tier1' && (
                 <div>
                   <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Company TPIN Number (Required for {vendorTier.toUpperCase()})</label>
@@ -237,7 +277,7 @@ export default function App() {
                 <h3 className="text-sm font-bold text-white uppercase">{vendorTier} Active Subscription</h3>
               </div>
               <p className="text-[11px] text-stone-400">
-                {vendorTier === 'tier1' ? 'Free Plan: 0 ZMW/mo + 1% Ntemba transaction fee' : vendorTier === 'tier2' ? 'Growth Plan: K175/mo + Company TPIN' : 'Enterprise Plan: K850/mo + VSDM Smart Sync'}
+                WhatsApp Linked: <span className="font-mono text-amber-400">{whatsappPhone}</span>
               </p>
             </div>
             <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-xl">
@@ -328,20 +368,58 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: INVENTORY */}
+          {/* TAB 2: COUNCIL LEVIES & WHATSAPP RECEIPT MODULE */}
           {activeBottomTab === 'inventory' && (
             <div className={`p-5 rounded-2xl ${theme.cardBg} space-y-4`}>
-              <h3 className="text-sm font-black text-white">Catalog Management</h3>
-              <div className="space-y-2">
-                {inventory.map(item => (
-                  <div key={item.id} className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl flex justify-between items-center text-xs">
-                    <div>
-                      <p className="font-bold text-white">{item.name}</p>
-                      <p className="text-stone-400 font-mono">ZMW {item.price} | Stock: {item.stock}</p>
-                    </div>
-                    <span className="text-amber-400 font-mono">Active</span>
+              <div>
+                <h3 className="text-sm font-black text-white">Local Council & Market Levy Express</h3>
+                <p className="text-[11px] text-stone-400">Pay municipal fees instantly and get verified digital permits sent to WhatsApp.</p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-stone-400 mb-1">Target WhatsApp Phone Number</label>
+                  <input 
+                    type="text" 
+                    value={whatsappPhone}
+                    onChange={(e) => setWhatsappPhone(e.target.value)}
+                    placeholder="e.g., 260971234567" 
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button 
+                    onClick={() => handlePayCouncilLevy('Lusaka City Council - Daily Market Stall', 15)}
+                    className="p-3 bg-stone-950 border border-stone-800 rounded-xl text-left hover:border-amber-500 transition-all cursor-pointer"
+                  >
+                    <p className="text-xs font-bold text-white">Daily Market Levy</p>
+                    <p className="text-xs text-amber-400 font-mono mt-1">ZMW 15.00</p>
+                  </button>
+
+                  <button 
+                    onClick={() => handlePayCouncilLevy('Lusaka City Council - Monthly Store Permit', 250)}
+                    className="p-3 bg-stone-950 border border-stone-800 rounded-xl text-left hover:border-amber-500 transition-all cursor-pointer"
+                  >
+                    <p className="text-xs font-bold text-white">Monthly Store Permit</p>
+                    <p className="text-xs text-amber-400 font-mono mt-1">ZMW 250.00</p>
+                  </button>
+                </div>
+
+                {levyHistory.length > 0 && (
+                  <div className="border-t border-stone-800 pt-3 space-y-2">
+                    <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider">Recent Levy Receipts</h4>
+                    {levyHistory.map(levy => (
+                      <div key={levy.id} className="p-3 bg-stone-950/60 border border-stone-800 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-white">{levy.council}</p>
+                          <p className="text-[10px] text-stone-400 font-mono">{levy.id} | {levy.status}</p>
+                        </div>
+                        <span className="text-amber-400 font-mono font-bold">ZMW {levy.amount}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -438,8 +516,8 @@ export default function App() {
             onClick={() => setActiveBottomTab('inventory')} 
             className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'inventory' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
           >
-            <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">📦</span>
-            <span className="text-[10px]">Catalog</span>
+            <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">🏛️</span>
+            <span className="text-[10px]">Council Levies</span>
           </button>
 
           <button 
