@@ -37,6 +37,57 @@ export default function App() {
     { name: 'Cooking Oil', price: 35, unit: 'liters' },
   ]);
 
+  // Dynamic Theme Config per Tier (3D Banking Feel)
+  const getThemeConfig = (tier) => {
+    switch (tier) {
+      case 'Basic':
+        return {
+          name: 'Basic',
+          bgMain: 'bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950',
+          headerBg: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.3)]',
+          cardBg: 'bg-emerald-950/20 backdrop-blur-xl border border-emerald-500/20 shadow-[0_12px_20px_-8px_rgba(0,0,0,0.5)]',
+          badgeBg: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+          accentColor: 'text-emerald-400',
+          buttonBg: 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-[0_8px_20px_rgba(16,185,129,0.4)] border-t border-white/20 active:translate-y-0.5',
+          activeNav: 'text-emerald-400 font-extrabold scale-105 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]',
+          inputBg: 'bg-emerald-950/40 border-emerald-500/30 text-white placeholder-emerald-300/40 focus:border-emerald-400',
+          tabBarBg: 'bg-emerald-950/90 border-emerald-500/20 backdrop-blur-md',
+          isDark: true
+        };
+      case 'Standard':
+        return {
+          name: 'Standard',
+          bgMain: 'bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950',
+          headerBg: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 shadow-[0_10px_25px_-5px_rgba(37,99,235,0.4)]',
+          cardBg: 'bg-blue-950/20 backdrop-blur-xl border border-blue-500/20 shadow-[0_12px_20px_-8px_rgba(0,0,0,0.5)]',
+          badgeBg: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+          accentColor: 'text-blue-400',
+          buttonBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_8px_20px_rgba(37,99,235,0.4)] border-t border-white/20 active:translate-y-0.5',
+          activeNav: 'text-blue-400 font-extrabold scale-105 drop-shadow-[0_0_12px_rgba(37,99,235,0.6)]',
+          inputBg: 'bg-blue-950/40 border-blue-500/30 text-white placeholder-blue-300/40 focus:border-blue-400',
+          tabBarBg: 'bg-blue-950/90 border-blue-500/20 backdrop-blur-md',
+          isDark: true
+        };
+      case 'Enterprise':
+      default:
+        return {
+          name: 'Enterprise',
+          bgMain: 'bg-gradient-to-br from-neutral-950 via-stone-900 to-zinc-950',
+          headerBg: 'bg-gradient-to-r from-neutral-900 via-stone-900 to-amber-950 shadow-[0_10px_25px_-5px_rgba(217,119,6,0.3)] border-b border-amber-500/30',
+          cardBg: 'bg-neutral-900/60 backdrop-blur-xl border border-amber-500/30 shadow-[0_15px_25px_-8px_rgba(0,0,0,0.8)]',
+          badgeBg: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+          accentColor: 'text-amber-400',
+          buttonBg: 'bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 shadow-[0_8px_20px_rgba(217,119,6,0.5)] border-t border-white/30 active:translate-y-0.5 text-black font-black',
+          activeNav: 'text-amber-400 font-extrabold scale-105 drop-shadow-[0_0_12px_rgba(217,119,6,0.8)]',
+          inputBg: 'bg-neutral-950 border-amber-500/30 text-amber-100 placeholder-amber-400/30 focus:border-amber-400',
+          tabBarBg: 'bg-neutral-950/95 border-amber-500/30 backdrop-blur-md',
+          isDark: true
+        };
+    }
+  };
+
+  const theme = getThemeConfig(selectedTier);
+
   const getReportMonths = (tier) => {
     if (tier === 'Basic') return 3;
     if (tier === 'Standard') return 6;
@@ -117,7 +168,7 @@ export default function App() {
 --------------------------------
 Date: ${dateTime}
 Cashier: ${username}
-Tier: ${selectedTier}
+Tier: ${selectedTier} (${theme.name} Theme)
 --------------------------------
 QTY/UNIT   ITEM          TOTAL  
 --------------------------------\n`;
@@ -140,54 +191,56 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-slate-950 select-none overflow-hidden font-sans">
+    <div className={`flex flex-col h-full w-full ${theme.bgMain} select-none overflow-hidden font-sans text-white transition-colors duration-500`}>
       
       {/* 🛠️ DEV DEBUGGER BAR */}
-      <div className="bg-slate-900 border-b border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-300 overflow-x-auto shrink-0 z-50">
-        <div className="flex items-center gap-1.5 font-bold text-indigo-400 whitespace-nowrap mr-2">
-          <span>⚡ Interface Inspector:</span>
+      <div className="bg-black/80 backdrop-blur-md border-b border-white/10 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-300 overflow-x-auto shrink-0 z-50">
+        <div className="flex items-center gap-1.5 font-bold text-amber-400 whitespace-nowrap mr-2">
+          <span>⚡ 3D Theme Inspector:</span>
         </div>
         <div className="flex items-center gap-1.5 whitespace-nowrap">
-          <button onClick={() => setView('login')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'login' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}`}>1. Login</button>
-          <button onClick={() => setView('signup')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'signup' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}`}>2. Sign Up</button>
-          <button onClick={() => setView('forgot')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'forgot' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}`}>3. Forgot Pwd</button>
-          <button onClick={() => setView('pos')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'pos' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}`}>4. App Home (Airtel Style)</button>
+          <button onClick={() => setView('login')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'login' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'}`}>1. Login</button>
+          <button onClick={() => setView('signup')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'signup' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'}`}>2. Sign Up</button>
+          <button onClick={() => setView('forgot')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'forgot' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'}`}>3. Forgot Pwd</button>
+          <button onClick={() => setView('pos')} className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${view === 'pos' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'}`}>4. App Home</button>
           <span className="text-slate-700 mx-1">|</span>
-          <span className="text-slate-400">Tier:</span>
+          <span className="text-slate-400">Tier Palette:</span>
           <select 
             value={selectedTier} 
             onChange={(e) => setSelectedTier(e.target.value)}
-            className="bg-slate-800 text-white border border-slate-700 rounded px-1.5 py-0.5 text-[10px] font-bold outline-none cursor-pointer"
+            className="bg-slate-900 text-amber-300 border border-amber-500/40 rounded px-1.5 py-0.5 text-[10px] font-bold outline-none cursor-pointer shadow-sm"
           >
-            <option value="Basic">Basic (No Stock / Free Text)</option>
-            <option value="Standard">Standard (6M Audit)</option>
-            <option value="Enterprise">Enterprise (12M Audit)</option>
+            <option value="Basic">Basic (Emerald 3D)</option>
+            <option value="Standard">Standard (Stanbic Blue)</option>
+            <option value="Enterprise">Enterprise (Obsidian & Gold)</option>
           </select>
         </div>
       </div>
 
       {/* 1. LOGIN INTERFACE */}
       {view === 'login' && (
-        <div className="flex flex-col items-center justify-center flex-1 w-full bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6">
-          <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl shadow-2xl flex flex-col gap-6 text-white">
-            <div className="text-center">
+        <div className="flex flex-col items-center justify-center flex-1 w-full p-6">
+          <div className="w-full max-w-sm bg-black/40 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col gap-6 text-white relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="text-center relative z-10">
+              <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase mb-2 ${theme.badgeBg}`}>Stanbic Security Protocol</span>
               <h1 className="text-3xl font-black tracking-tight mb-1">Ntemba POS</h1>
-              <p className="text-slate-300 text-xs font-medium">Sign in to your cashier terminal</p>
+              <p className="text-slate-300 text-xs font-medium">Secure Terminal • {selectedTier} Theme</p>
             </div>
-            <form onSubmit={e => { e.preventDefault(); setView('pos'); }} className="flex flex-col gap-4">
+            <form onSubmit={e => { e.preventDefault(); setView('pos'); }} className="flex flex-col gap-4 relative z-10">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                <input type="text" value={username} onChange={e => username => setUsername(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
-              <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-extrabold text-sm shadow-lg cursor-pointer">Sign In</button>
+              <button type="submit" className={`w-full py-3.5 rounded-xl font-extrabold text-sm shadow-xl cursor-pointer transition-all ${theme.buttonBg}`}>Sign In</button>
             </form>
-            <div className="flex justify-between text-xs font-semibold text-slate-400 mt-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-300 mt-2 relative z-10">
               <button onClick={() => setView('forgot')} className="hover:text-white cursor-pointer">Forgot password?</button>
-              <button onClick={() => setView('signup')} className="text-indigo-400 hover:text-indigo-300 cursor-pointer">Create Account</button>
+              <button onClick={() => setView('signup')} className={`${theme.accentColor} font-bold hover:underline cursor-pointer`}>Create Account</button>
             </div>
           </div>
         </div>
@@ -195,51 +248,51 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
 
       {/* 2. SIGN UP INTERFACE */}
       {view === 'signup' && (
-        <div className="flex flex-col items-center justify-center flex-1 w-full bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6 overflow-y-auto">
-          <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl shadow-2xl flex flex-col gap-5 text-white my-auto">
+        <div className="flex flex-col items-center justify-center flex-1 w-full p-6 overflow-y-auto">
+          <div className="w-full max-w-sm bg-black/40 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col gap-5 text-white my-auto">
             <div className="text-center">
+              <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase mb-2 ${theme.badgeBg}`}>Choose 3D Theme Tier</span>
               <h1 className="text-2xl font-black tracking-tight mb-1">Create Account</h1>
-              <p className="text-slate-300 text-xs font-medium">Select your plan tier</p>
             </div>
             <form onSubmit={e => { e.preventDefault(); setView('pos'); }} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Subscription Tier</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Select Subscription Tier & 3D Palette</label>
                 <div className="flex flex-col gap-2">
                   {[
-                    { name: 'Basic', desc: 'Free-text sales & 3M audit' },
-                    { name: 'Standard', desc: 'Inventory mgmt & 6M audit' },
-                    { name: 'Enterprise', desc: 'Full stock & 12M audit' }
+                    { name: 'Basic', desc: 'Emerald & Mint 3D Palette (3M Audit)' },
+                    { name: 'Standard', desc: 'Stanbic Blue Corporate 3D (6M Audit)' },
+                    { name: 'Enterprise', desc: 'Obsidian & Gold Metallic 3D (12M Audit)' }
                   ].map(tier => (
                     <div 
                       key={tier.name}
                       onClick={() => setSelectedTier(tier.name)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex justify-between items-center ${
-                        selectedTier === tier.name ? 'bg-indigo-600/40 border-indigo-400' : 'bg-slate-900/40 border-slate-700'
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all flex justify-between items-center shadow-lg ${
+                        selectedTier === tier.name ? 'bg-white/20 border-white scale-[1.02]' : 'bg-black/30 border-white/10 hover:bg-black/50'
                       }`}
                     >
                       <div>
                         <div className="font-bold text-sm text-white">{tier.name} Tier</div>
-                        <div className="text-[10px] text-indigo-300 font-bold">{tier.desc}</div>
+                        <div className="text-[10px] text-slate-300 font-semibold">{tier.desc}</div>
                       </div>
-                      <span className="text-xs font-extrabold text-indigo-300">
-                        {selectedTier === tier.name ? '✓ Selected' : 'Select'}
+                      <span className={`text-xs font-extrabold px-2 py-1 rounded-lg ${selectedTier === tier.name ? 'bg-white text-black' : 'text-slate-400'}`}>
+                        {selectedTier === tier.name ? 'Active' : 'Select'}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-              <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-extrabold text-sm shadow-lg cursor-pointer">Complete Sign Up</button>
+              <button type="submit" className={`w-full py-3.5 rounded-xl font-extrabold text-sm shadow-xl cursor-pointer transition-all ${theme.buttonBg}`}>Complete Sign Up</button>
             </form>
-            <div className="text-center text-xs text-slate-400 mt-1">
-              Already have an account? <button onClick={() => setView('login')} className="text-indigo-400 font-bold hover:underline cursor-pointer">Sign In</button>
+            <div className="text-center text-xs text-slate-300 mt-1">
+              Already have an account? <button onClick={() => setView('login')} className={`${theme.accentColor} font-bold hover:underline cursor-pointer`}>Sign In</button>
             </div>
           </div>
         </div>
@@ -247,51 +300,56 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
 
       {/* 3. FORGOT PASSWORD INTERFACE */}
       {view === 'forgot' && (
-        <div className="flex flex-col items-center justify-center flex-1 w-full bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6">
-          <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl shadow-2xl flex flex-col gap-6 text-white">
+        <div className="flex flex-col items-center justify-center flex-1 w-full p-6">
+          <div className="w-full max-w-sm bg-black/40 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col gap-6 text-white">
             <div className="text-center">
               <h1 className="text-2xl font-black tracking-tight mb-1">Reset Password</h1>
-              <p className="text-slate-300 text-xs font-medium">Enter your username to recover access</p>
+              <p className="text-slate-300 text-xs font-medium">Recover terminal access</p>
             </div>
             <form onSubmit={e => { e.preventDefault(); setView('login'); }} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
-              <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-extrabold text-sm shadow-lg cursor-pointer">Send Reset Instructions</button>
+              <button type="submit" className={`w-full py-3.5 rounded-xl font-extrabold text-sm shadow-xl cursor-pointer transition-all ${theme.buttonBg}`}>Send Reset Instructions</button>
             </form>
-            <div className="text-center text-xs text-slate-400 mt-1">
-              Remembered password? <button onClick={() => setView('login')} className="text-indigo-400 font-bold hover:underline cursor-pointer">Sign In</button>
+            <div className="text-center text-xs text-slate-300 mt-1">
+              Remembered password? <button onClick={() => setView('login')} className={`${theme.accentColor} font-bold hover:underline cursor-pointer`}>Sign In</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. MAIN APP HOME (AIRTEL-STYLE BOTTOM NAV) */}
+      {/* 4. MAIN APP HOME (3D THEMED & 3D ICON BUTTONS) */}
       {view === 'pos' && (
-        <div className="flex flex-col flex-1 w-full bg-slate-50 overflow-hidden relative">
+        <div className="flex flex-col flex-1 w-full overflow-hidden relative">
           
           {/* Header */}
-          <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-white flex justify-between items-center shadow-md shrink-0">
+          <header className={`px-5 py-3.5 text-white flex justify-between items-center shrink-0 z-20 ${theme.headerBg}`}>
             <div>
-              <h1 className="text-base font-black tracking-tight">Ntemba POS</h1>
-              <span className="text-[10px] text-indigo-200 font-semibold">{username} • <span className="text-white font-bold">{selectedTier} Tier</span></span>
+              <div className="flex items-center gap-2">
+                <span className="text-base">💳</span>
+                <h1 className="text-base font-black tracking-tight">Ntemba POS</h1>
+              </div>
+              <span className="text-[10px] text-white/80 font-semibold">{username} • <span className="text-white font-extrabold underline">{selectedTier} Tier ({theme.name})</span></span>
             </div>
-            <button onClick={() => setView('login')} className="bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer">Logout</button>
+            <button onClick={() => setView('login')} className="bg-black/20 hover:bg-black/40 border border-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md">Logout</button>
           </header>
 
           {/* MAIN CONTENT AREA PER ACTIVE BOTTOM TAB */}
-          <div className="flex-1 overflow-y-auto flex flex-col pb-20">
+          <div className="flex-1 overflow-y-auto flex flex-col pb-24 p-4">
             
             {/* TAB 1: HOME / MAKING A SALE */}
             {activeBottomTab === 'sales' && (
-              <div className="p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
+              <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
                 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
+                <div className={`p-5 rounded-3xl shadow-2xl flex flex-col gap-3 transition-all ${theme.cardBg}`}>
                   <div className="flex justify-between items-center">
-                    <h2 className="text-sm font-extrabold text-slate-900">⚡ Quick Sale Entry (Units, Kg, Liters)</h2>
-                    <span className="text-[11px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">
-                      {selectedTier === 'Basic' ? 'Free-Text & Predictive Mode' : 'Catalog Tap or Quick Add'}
+                    <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+                      <span className="p-2 rounded-xl bg-white/10 shadow-inner text-base">⚡</span> Quick Sale Entry (Units, Kg, Liters)
+                    </h2>
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold shadow-md ${theme.badgeBg}`}>
+                      {selectedTier === 'Basic' ? 'Emerald Free-Text' : selectedTier === 'Standard' ? 'Stanbic Smart Entry' : 'Enterprise Obsidian Mode'}
                     </span>
                   </div>
 
@@ -303,18 +361,18 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                           placeholder="Item Name (e.g. Tomatoes)..."
                           value={customItemName}
                           onChange={e => setCustomItemName(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-600"
+                          className={`w-full rounded-2xl px-4 py-3 text-xs font-medium outline-none border shadow-inner ${theme.inputBg}`}
                         />
                         {filteredSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl mt-1 z-20 overflow-hidden">
+                          <div className="absolute top-full left-0 right-0 bg-neutral-900 border border-white/25 rounded-2xl shadow-2xl mt-1.5 z-30 overflow-hidden backdrop-blur-xl">
                             {filteredSuggestions.map((s, idx) => (
                               <div 
                                 key={idx}
                                 onClick={() => { setCustomItemName(s.name); setCustomItemPrice(s.price.toString()); setCustomItemUnit(s.unit || 'units'); }}
-                                className="px-3 py-2 text-xs hover:bg-indigo-50 cursor-pointer flex justify-between font-medium text-slate-700 border-b last:border-b-0"
+                                className="px-4 py-2.5 text-xs hover:bg-white/10 cursor-pointer flex justify-between font-medium text-white border-b border-white/10 last:border-b-0"
                               >
                                 <span>⚡ {s.name} ({s.unit})</span>
-                                <span className="font-bold text-indigo-600">ZMW {s.price}</span>
+                                <span className={`font-bold ${theme.accentColor}`}>ZMW {s.price}</span>
                               </div>
                             ))}
                           </div>
@@ -324,20 +382,20 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                       <input 
                         type="number" 
                         step="any"
-                        placeholder="Qty / Weight"
+                        placeholder="Qty"
                         value={customItemQty}
                         onChange={e => setCustomItemQty(e.target.value)}
-                        className="w-20 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-600"
+                        className={`w-20 rounded-2xl px-3 py-3 text-xs font-medium outline-none border shadow-inner text-center ${theme.inputBg}`}
                       />
 
                       <select 
                         value={customItemUnit}
                         onChange={e => setCustomItemUnit(e.target.value)}
-                        className="w-24 bg-slate-50 border border-slate-300 rounded-xl px-2 py-2.5 text-xs font-bold outline-none cursor-pointer"
+                        className={`w-28 rounded-2xl px-3 py-3 text-xs font-bold outline-none cursor-pointer border shadow-inner ${theme.inputBg}`}
                       >
-                        <option value="units">Units (pcs)</option>
-                        <option value="kg">Kg (Weight)</option>
-                        <option value="liters">Liters (Vol)</option>
+                        <option value="units" className="bg-neutral-900">Units (pcs)</option>
+                        <option value="kg" className="bg-neutral-900">Kg (Weight)</option>
+                        <option value="liters" className="bg-neutral-900">Liters (Vol)</option>
                       </select>
                       
                       <input 
@@ -346,54 +404,62 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                         placeholder="Price (ZMW)"
                         value={customItemPrice}
                         onChange={e => setCustomItemPrice(e.target.value)}
-                        className="w-28 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-600"
+                        className={`w-32 rounded-2xl px-4 py-3 text-xs font-medium outline-none border shadow-inner ${theme.inputBg}`}
                       />
                       
-                      <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">Add</button>
+                      <button type="submit" className={`px-5 py-3 rounded-2xl text-xs font-bold cursor-pointer transition-all shadow-lg ${theme.buttonBg}`}>Add</button>
                     </div>
                   </form>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
-                  <h2 className="text-sm font-extrabold text-slate-900">📦 Quick Tap Catalog</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                <div className={`p-5 rounded-3xl shadow-2xl flex flex-col gap-3 ${theme.cardBg}`}>
+                  <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-white/10 shadow-inner text-base">📦</span> Quick Tap Catalog
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {inventory.map(prod => (
-                      <div key={prod.id} onClick={() => addToCart(prod, 1)} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between h-20 cursor-pointer hover:border-indigo-500 transition-all">
-                        <span className="font-bold text-slate-800 text-xs">{prod.name}</span>
-                        <div className="flex justify-between items-end">
-                          <span className="font-extrabold text-indigo-600 text-xs">ZMW {prod.price.toFixed(2)} / {prod.unit}</span>
-                          {prod.stock !== null && <span className="text-[10px] text-slate-400">Stock: {prod.stock} {prod.unit}</span>}
+                      <div 
+                        key={prod.id} 
+                        onClick={() => addToCart(prod, 1)} 
+                        className="bg-black/30 hover:bg-black/50 p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between h-24 cursor-pointer hover:border-white/40 transition-all shadow-[0_8px_16px_-4px_rgba(0,0,0,0.6)] active:scale-95 group"
+                      >
+                        <span className="font-bold text-white text-xs group-hover:translate-x-0.5 transition-transform">{prod.name}</span>
+                        <div className="flex justify-between items-end border-t border-white/10 pt-2">
+                          <span className={`font-black text-xs ${theme.accentColor}`}>ZMW {prod.price.toFixed(2)}</span>
+                          {prod.stock !== null && <span className="text-[10px] text-white/50">{prod.stock} {prod.unit}</span>}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
-                  <h2 className="text-sm font-extrabold text-slate-900">🛒 Active Cart</h2>
+                <div className={`p-5 rounded-3xl shadow-2xl flex flex-col gap-3 ${theme.cardBg}`}>
+                  <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-white/10 shadow-inner text-base">🛒</span> Active Cart
+                  </h2>
                   {cart.length === 0 ? (
-                    <p className="text-slate-400 text-xs text-center py-4">No items added to current sale yet</p>
+                    <p className="text-white/40 text-xs text-center py-6">No items added to current sale yet</p>
                   ) : (
-                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
                       {cart.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-slate-50 border px-3 py-2 rounded-xl text-xs">
+                        <div key={idx} className="flex justify-between items-center bg-black/40 border border-white/10 px-4 py-2.5 rounded-2xl text-xs shadow-inner">
                           <span>{item.name} ({item.qty} {item.unit})</span>
-                          <strong>ZMW {(item.price * item.qty).toFixed(2)}</strong>
+                          <strong className={theme.accentColor}>ZMW {(item.price * item.qty).toFixed(2)}</strong>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div className="border-t pt-3 flex justify-between items-center text-sm font-black text-slate-900">
+                  <div className="border-t border-white/10 pt-3 flex justify-between items-center text-sm font-black text-white">
                     <span>Total Due</span>
-                    <span className="text-indigo-600 text-base">ZMW {total.toFixed(2)}</span>
+                    <span className={`text-base ${theme.accentColor}`}>ZMW {total.toFixed(2)}</span>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully! (1% Platform Fee of ZMW ${backgroundFee.toFixed(2)} recorded in backend ledger)`); setCart([]); }} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md">
+                  <div className="flex gap-2 pt-2">
+                    <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully! (1% Platform Fee of ZMW ${backgroundFee.toFixed(2)} recorded in backend ledger)`); setCart([]); }} className={`flex-1 py-3.5 rounded-2xl font-extrabold text-xs cursor-pointer shadow-xl transition-all ${theme.buttonBg}`}>
                       Charge ZMW {total.toFixed(2)}
                     </button>
-                    <button onClick={sendWhatsAppReceipt} className="px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md flex items-center gap-1.5">
-                      <span>💬 Send Thermal WhatsApp Receipt</span>
+                    <button onClick={sendWhatsAppReceipt} className="px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-2xl font-extrabold text-xs cursor-pointer shadow-xl flex items-center gap-1.5 hover:brightness-110 active:translate-y-0.5 border-t border-white/20">
+                      <span>💬 WhatsApp Receipt</span>
                     </button>
                   </div>
                 </div>
@@ -401,43 +467,45 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
               </div>
             )}
 
-            {/* TAB 2: INVENTORY & STOCK MAINTENANCE (ADD & DELETE) */}
+            {/* TAB 2: INVENTORY & STOCK MAINTENANCE */}
             {activeBottomTab === 'inventory' && (
-              <div className="p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center border-b pb-3">
+              <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
+                <div className={`p-6 rounded-3xl shadow-2xl flex flex-col gap-4 ${theme.cardBg}`}>
+                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
                     <div>
-                      <h2 className="text-base font-black text-slate-900">Inventory & Stock Maintenance</h2>
-                      <p className="text-xs text-slate-500">Manage items by units, weight (kg), or volume (liters) for your tier ({selectedTier})</p>
+                      <h2 className="text-base font-black text-white flex items-center gap-2">
+                        <span className="p-2 rounded-xl bg-white/10 text-base">📦</span> Inventory & Stock Maintenance
+                      </h2>
+                      <p className="text-xs text-white/50 mt-0.5">Manage stock items in {theme.name} Theme mode</p>
                     </div>
                   </div>
 
-                  <form onSubmit={handleAddInventoryItem} className="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border">
-                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide">Add New Stock Item</h3>
+                  <form onSubmit={handleAddInventoryItem} className="flex flex-col gap-3 bg-black/30 p-4 rounded-2xl border border-white/10 shadow-inner">
+                    <h3 className="text-xs font-extrabold text-white uppercase tracking-wide">Add New Stock Item</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                       <input 
                         type="text" 
                         placeholder="Item Name" 
                         value={newItemName} 
                         onChange={e => setNewItemName(e.target.value)} 
-                        className="bg-white border rounded-xl px-3 py-2 text-xs outline-none"
+                        className={`rounded-xl px-3 py-2.5 text-xs outline-none border ${theme.inputBg}`}
                       />
                       <input 
                         type="number" 
                         step="any"
-                        placeholder="Price per unit/kg/L (ZMW)" 
+                        placeholder="Price per unit (ZMW)" 
                         value={newItemPrice} 
                         onChange={e => setNewItemPrice(e.target.value)} 
-                        className="bg-white border rounded-xl px-3 py-2 text-xs outline-none"
+                        className={`rounded-xl px-3 py-2.5 text-xs outline-none border ${theme.inputBg}`}
                       />
                       <select 
                         value={newItemUnit} 
                         onChange={e => setNewItemUnit(e.target.value)} 
-                        className="bg-white border rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-pointer"
+                        className={`rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer border ${theme.inputBg}`}
                       >
-                        <option value="units">Units (pcs)</option>
-                        <option value="kg">Kilograms (kg)</option>
-                        <option value="liters">Liters (L)</option>
+                        <option value="units" className="bg-neutral-900">Units (pcs)</option>
+                        <option value="kg" className="bg-neutral-900">Kilograms (kg)</option>
+                        <option value="liters" className="bg-neutral-900">Liters (L)</option>
                       </select>
                       {selectedTier !== 'Basic' && (
                         <input 
@@ -446,29 +514,29 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                           placeholder="Initial Stock Count" 
                           value={newItemStock} 
                           onChange={e => setNewItemStock(e.target.value)} 
-                          className="bg-white border rounded-xl px-3 py-2 text-xs outline-none"
+                          className={`rounded-xl px-3 py-2.5 text-xs outline-none border ${theme.inputBg}`}
                         />
                       )}
                     </div>
-                    <button type="submit" className="self-end bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer">Save to Inventory</button>
+                    <button type="submit" className={`self-end px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer shadow-lg ${theme.buttonBg}`}>Save to Inventory</button>
                   </form>
 
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide">Current Catalog & Maintenance List</h3>
+                    <h3 className="text-xs font-extrabold text-white uppercase tracking-wide">Current Catalog</h3>
                     {inventory.map(item => (
-                      <div key={item.id} className="flex justify-between items-center bg-white border px-4 py-3 rounded-xl text-xs shadow-sm">
+                      <div key={item.id} className="flex justify-between items-center bg-black/40 border border-white/10 px-4 py-3 rounded-2xl text-xs shadow-inner">
                         <div>
-                          <span className="font-bold text-slate-800 block">{item.name}</span>
-                          <span className="text-slate-400 text-[10px]">Category: {item.category || 'General'} • Sold by: <strong className="text-indigo-600">{item.unit}</strong></span>
+                          <span className="font-bold text-white block">{item.name}</span>
+                          <span className="text-white/40 text-[10px]">Category: {item.category || 'General'} • Sold by: <strong className={theme.accentColor}>{item.unit}</strong></span>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <span className="font-extrabold text-indigo-600 block">ZMW {item.price.toFixed(2)} / {item.unit}</span>
-                            {item.stock !== null && <span className="text-[10px] text-slate-500">Stock: {item.stock} {item.unit}</span>}
+                            <span className={`font-black block ${theme.accentColor}`}>ZMW {item.price.toFixed(2)} / {item.unit}</span>
+                            {item.stock !== null && <span className="text-[10px] text-white/50">Stock: {item.stock} {item.unit}</span>}
                           </div>
                           <button 
                             onClick={() => handleDeleteInventoryItem(item.id)}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg font-bold text-xs cursor-pointer transition-all"
+                            className="bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 p-2 rounded-xl font-bold text-xs cursor-pointer transition-all shadow-md"
                             title="Delete Item"
                           >
                             🗑️
@@ -483,77 +551,79 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
 
             {/* TAB 3: REPORTS, PROFIT & LOSS, & BANK SCORING */}
             {activeBottomTab === 'reports' && (
-              <div className="p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
+              <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
                 
                 {/* 1. SIMPLE PROFIT & LOSS STATEMENT (ALL TIERS) */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-center border-b pb-3">
+                <div className={`p-6 rounded-3xl shadow-2xl flex flex-col gap-4 ${theme.cardBg}`}>
+                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
                     <div>
-                      <span className="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Financial Statement ({selectedTier} Tier)</span>
-                      <h2 className="text-base font-black text-slate-900 mt-1">Profit & Loss (P&L) Summary</h2>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${theme.badgeBg}`}>Financial Statement ({theme.name} Theme)</span>
+                      <h2 className="text-base font-black text-white mt-1">Profit & Loss (P&L) Summary</h2>
                     </div>
-                    <span className="text-xs font-bold text-slate-400">{reportMonthsAllowed}M Horizon</span>
+                    <span className="text-xs font-bold text-white/50">{reportMonthsAllowed}M Horizon</span>
                   </div>
 
                   <div className="flex flex-col gap-2 text-xs font-medium">
-                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                      <span className="text-slate-600">Total Gross Revenue</span>
-                      <strong className="text-slate-900">ZMW 48,250.00</strong>
+                    <div className="flex justify-between py-1.5 border-b border-white/10">
+                      <span className="text-white/70">Total Gross Revenue</span>
+                      <strong className="text-white">ZMW 48,250.00</strong>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                      <span className="text-slate-600">Cost of Goods Sold (COGS)</span>
-                      <strong className="text-red-600">- ZMW 29,400.00</strong>
+                    <div className="flex justify-between py-1.5 border-b border-white/10">
+                      <span className="text-white/70">Cost of Goods Sold (COGS)</span>
+                      <strong className="text-red-400">- ZMW 29,400.00</strong>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-100 font-bold bg-slate-50 px-2 rounded">
-                      <span className="text-slate-800">Gross Profit</span>
-                      <span className="text-emerald-600">ZMW 18,850.00</span>
+                    <div className="flex justify-between py-1.5 border-b border-white/10 font-bold bg-white/5 px-3 rounded-xl">
+                      <span className="text-white">Gross Profit</span>
+                      <span className="text-emerald-400">ZMW 18,850.00</span>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                      <span className="text-slate-600">Operating Expenses (Rent, Utilities)</span>
-                      <strong className="text-red-600">- ZMW 4,200.00</strong>
+                    <div className="flex justify-between py-1.5 border-b border-white/10">
+                      <span className="text-white/70">Operating Expenses (Rent, Utilities)</span>
+                      <strong className="text-red-400">- ZMW 4,200.00</strong>
                     </div>
-                    <div className="flex justify-between py-2 bg-emerald-50 px-3 rounded-xl text-sm font-black text-slate-900 mt-1">
+                    <div className="flex justify-between py-2.5 bg-black/40 border border-white/10 px-4 rounded-2xl text-sm font-black text-white mt-1 shadow-inner">
                       <span>Net Profit</span>
-                      <span className="text-emerald-700">ZMW 14,650.00</span>
+                      <span className="text-emerald-400 font-extrabold">ZMW 14,650.00</span>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. SALES PERFORMANCE & BANK SCORING */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-                  <h2 className="text-base font-black text-slate-900">📊 Sales Volume Metrics</h2>
+                <div className={`p-6 rounded-3xl shadow-2xl flex flex-col gap-4 ${theme.cardBg}`}>
+                  <h2 className="text-base font-black text-white flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-white/10 text-base">📊</span> Sales Volume Metrics
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="bg-indigo-50 border p-3 rounded-xl">
-                      <span className="text-[10px] font-bold text-indigo-600 uppercase">Total Revenue</span>
-                      <span className="text-xl font-black text-slate-900 block mt-0.5">ZMW 48,250.00</span>
+                    <div className="bg-black/30 border border-white/10 p-3.5 rounded-2xl shadow-inner">
+                      <span className="text-[10px] font-bold text-white/50 uppercase">Total Revenue</span>
+                      <span className={`text-xl font-black block mt-0.5 ${theme.accentColor}`}>ZMW 48,250.00</span>
                     </div>
-                    <div className="bg-violet-50 border p-3 rounded-xl">
-                      <span className="text-[10px] font-bold text-violet-600 uppercase">Transactions</span>
-                      <span className="text-xl font-black text-slate-900 block mt-0.5">1,420 orders</span>
+                    <div className="bg-black/30 border border-white/10 p-3.5 rounded-2xl shadow-inner">
+                      <span className="text-[10px] font-bold text-white/50 uppercase">Transactions</span>
+                      <span className={`text-xl font-black block mt-0.5 ${theme.accentColor}`}>1,420 orders</span>
                     </div>
-                    <div className="bg-emerald-50 border p-3 rounded-xl">
-                      <span className="text-[10px] font-bold text-emerald-600 uppercase">Avg Basket</span>
-                      <span className="text-xl font-black text-slate-900 block mt-0.5">ZMW 33.98</span>
+                    <div className="bg-black/30 border border-white/10 p-3.5 rounded-2xl shadow-inner">
+                      <span className="text-[10px] font-bold text-white/50 uppercase">Avg Basket</span>
+                      <span className={`text-xl font-black block mt-0.5 ${theme.accentColor}`}>ZMW 33.98</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-                  <div className="flex justify-between items-start border-b pb-3">
+                <div className={`p-6 rounded-3xl shadow-2xl flex flex-col gap-4 ${theme.cardBg}`}>
+                  <div className="flex justify-between items-start border-b border-white/10 pb-3">
                     <div>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Bank-Grade Audit ({selectedTier} Tier)</span>
-                      <h2 className="text-base font-black text-slate-900 mt-1">Trader Financial Health Scorecard</h2>
-                      <p className="text-xs text-slate-500">Certified for Commercial Credit Evaluation • {reportMonthsAllowed} Months Verified Horizon</p>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${theme.badgeBg}`}>Bank-Grade Audit</span>
+                      <h2 className="text-base font-black text-white mt-1">Trader Financial Health Scorecard</h2>
+                      <p className="text-xs text-white/50">Certified Commercial Credit Evaluation • {reportMonthsAllowed}M Horizon</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-black text-emerald-600">88 / 100</div>
-                      <span className="text-[10px] font-bold text-slate-400">Grade: A+</span>
+                      <div className="text-2xl font-black text-emerald-400">88 / 100</div>
+                      <span className="text-[10px] font-bold text-white/40">Grade: A+</span>
                     </div>
                   </div>
 
                   <button 
-                    onClick={() => alert(`SUCCESS: Official Bank Financial Scoring PDF downloaded for ${username} based on the ${selectedTier} tier (${reportMonthsAllowed} months audit)!`)} 
-                    className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-lg shadow-indigo-500/20"
+                    onClick={() => alert(`SUCCESS: Official Bank Financial Scoring PDF downloaded for ${username} in ${theme.name} Theme mode (${reportMonthsAllowed} months audit)!`)} 
+                    className={`w-full py-3.5 rounded-2xl font-extrabold text-xs cursor-pointer shadow-xl ${theme.buttonBg}`}
                   >
                     📥 Download Certified Bank Financial Scoring PDF ({reportMonthsAllowed}M Horizon)
                   </button>
@@ -561,14 +631,14 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
 
                 {/* 3. ENTERPRISE DESKTOP ADVISORY NOTICE */}
                 {selectedTier === 'Enterprise' && (
-                  <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-5 rounded-2xl border border-indigo-500/30 text-white flex flex-col gap-2 shadow-xl">
+                  <div className="bg-gradient-to-r from-neutral-900 via-stone-900 to-amber-950 p-5 rounded-3xl border border-amber-500/40 text-white flex flex-col gap-2 shadow-2xl">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">🖥️</span>
-                      <h3 className="text-sm font-black text-indigo-300">Enterprise Desktop Version Advisory</h3>
+                      <span className="text-xl">🖥️</span>
+                      <h3 className="text-sm font-black text-amber-300">Enterprise Desktop Version Advisory</h3>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      While your mobile device terminal handles everyday sales and stock entries, advanced Tier 3 tools—such as 
-                      <strong className="text-white"> Multi-Branch Warehouse Synchronization</strong>, <strong className="text-white">Automated Tax Authority (ZRA) Integration</strong>, and <strong className="text-white">Deep ERP Bulk CSV/Excel Reporting</strong>—are built for high performance and available directly on the <strong className="text-indigo-300">Ntemba POS Desktop Terminal</strong>.
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      While your mobile terminal handles everyday sales with the Obsidian & Gold 3D theme, advanced Tier 3 tools—such as 
+                      <strong className="text-white"> Multi-Branch Warehouse Synchronization</strong>, <strong className="text-white">Automated Tax Authority (ZRA) Integration</strong>, and <strong className="text-white">Deep ERP Bulk CSV/Excel Reporting</strong>—are built for high performance and available directly on the <strong className="text-amber-300">Ntemba POS Desktop Terminal</strong>.
                     </p>
                   </div>
                 )}
@@ -578,30 +648,30 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
 
           </div>
 
-          {/* BOTTOM NAVIGATION BAR */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 flex justify-around items-center shadow-2xl z-40">
+          {/* BOTTOM NAVIGATION BAR WITH 3D GLASSMORPHIC ICONS */}
+          <div className={`absolute bottom-0 left-0 right-0 border-t px-6 py-2.5 flex justify-around items-center shadow-2xl z-40 ${theme.tabBarBg}`}>
             <button 
               onClick={() => setActiveBottomTab('sales')} 
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'sales' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium hover:text-slate-600'}`}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'sales' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
             >
-              <span className="text-lg">🛒</span>
+              <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">🛒</span>
               <span className="text-[10px]">POS Home</span>
             </button>
 
             <button 
               onClick={() => setActiveBottomTab('inventory')} 
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'inventory' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium hover:text-slate-600'}`}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'inventory' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
             >
-              <span className="text-lg">📦</span>
+              <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">📦</span>
               <span className="text-[10px]">Stock & Catalog</span>
             </button>
 
             <button 
               onClick={() => setActiveBottomTab('reports')} 
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'reports' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium hover:text-slate-600'}`}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeBottomTab === 'reports' ? theme.activeNav : 'text-white/40 font-medium hover:text-white/70'}`}
             >
-              <span className="text-lg">📊</span>
-              <span className="text-[10px]">Reports & Scoring</span>
+              <span className="text-xl p-1.5 rounded-xl bg-black/20 shadow-inner">📊</span>
+              <span className="text-[10px]">Reports & P&L</span>
             </button>
           </div>
 
