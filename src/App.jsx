@@ -139,10 +139,21 @@ export default function App() {
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-  const vat = tier !== 'tier1' ? subtotal * 0.16 : 0;
+  
+  // Tax calculations per tier specification
+  let taxAmount = 0;
+  let taxLabel = 'Tax Exempt';
+  if (tier === 'tier2') {
+    taxAmount = subtotal * 0.05; // 5% ZRA Turnover Tax
+    taxLabel = 'ZRA Turnover Tax (5%)';
+  } else if (tier === 'tier3') {
+    taxAmount = subtotal * 0.16; // 16% Standard VAT for Enterprise
+    taxLabel = 'ZRA VAT (16%)';
+  }
+
   const councilFee = tier !== 'tier1' ? 5 : 0;
   const ntembaFee = subtotal * 0.01;
-  const grandTotal = subtotal + vat + councilFee + ntembaFee;
+  const grandTotal = subtotal + taxAmount + councilFee + ntembaFee;
 
   const handleCheckout = (method) => {
     if (cart.length === 0) {
@@ -205,7 +216,7 @@ export default function App() {
       
       <div className={`w-full mx-auto flex-1 flex flex-col transition-all duration-300 ${tier !== 'tier1' ? 'max-w-6xl' : 'max-w-md'}`}>
         
-        {/* PROFESSIONAL HEADER */}
+        {/* HEADER */}
         <header className={`px-6 py-4 border ${currentTheme.panel} backdrop-blur-md flex flex-col sm:flex-row justify-between items-center gap-4 rounded-2xl mb-4 shadow-2xl`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-2xl ${currentTheme.btnPrimary} flex items-center justify-center font-black shadow-lg`}>
@@ -220,8 +231,8 @@ export default function App() {
               />
               <p className={`text-[9px] ${currentTheme.textAccent} uppercase tracking-widest font-mono font-bold`}>
                 {tier === 'tier1' && 'Community Edition • Free Tier'}
-                {tier === 'tier2' && 'Pro Tier • ZRA VAT & Municipal Hub'}
-                {tier === 'tier3' && 'Enterprise Tier • Multi-Store & HR Payroll'}
+                {tier === 'tier2' && 'Pro Tier • ZRA Turnover Tax (5%) & Accounting'}
+                {tier === 'tier3' && 'Enterprise Tier • K1,550/mo • HR Payroll & Audit'}
               </p>
             </div>
           </div>
@@ -229,13 +240,13 @@ export default function App() {
           {/* TIER SELECTOR */}
           <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
             <button onClick={() => setTier('tier1')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${tier === 'tier1' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
-              Tier 1
+              Tier 1 (Free)
             </button>
             <button onClick={() => setTier('tier2')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${tier === 'tier2' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>
-              Tier 2
+              Tier 2 (Pro)
             </button>
             <button onClick={() => setTier('tier3')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${tier === 'tier3' ? 'bg-amber-500 text-stone-950 shadow-md' : 'text-slate-400 hover:text-white'}`}>
-              Tier 3
+              Tier 3 (K1,550)
             </button>
           </div>
         </header>
@@ -257,8 +268,8 @@ export default function App() {
           <button onClick={() => setActiveTab('council')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${activeTab === 'council' ? currentTheme.activeTab : 'bg-black/20 text-slate-400 border-white/5 hover:bg-white/5'}`}>
             🏛️ Municipal Levies
           </button>
-          <button onClick={() => setActiveTab('ledger')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${activeTab === 'ledger' ? currentTheme.activeTab : 'bg-black/20 text-slate-400 border-white/5 hover:bg-white/5'}`}>
-            📊 Audit Ledger
+          <button onClick={() => setActiveTab('accounting')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${activeTab === 'accounting' ? currentTheme.activeTab : 'bg-black/20 text-slate-400 border-white/5 hover:bg-white/5'}`}>
+            📈 {tier === 'tier1' ? 'Simple P&L' : 'Core Accounting'}
           </button>
           {tier === 'tier3' && (
             <button onClick={() => setActiveTab('hr')} className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer col-span-3 sm:col-span-1 border ${activeTab === 'hr' ? currentTheme.activeTab : 'bg-black/20 text-amber-400/80 border-amber-500/20 hover:bg-amber-500/10'}`}>
@@ -362,10 +373,16 @@ export default function App() {
                       <span>Subtotal</span>
                       <span>ZMW {subtotal.toFixed(2)}</span>
                     </div>
-                    {tier !== 'tier1' && (
+                    {tier === 'tier2' && (
+                      <div className="flex justify-between text-slate-400">
+                        <span>ZRA Turnover Tax (5%)</span>
+                        <span>ZMW {taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {tier === 'tier3' && (
                       <div className="flex justify-between text-slate-400">
                         <span>ZRA VAT (16%)</span>
-                        <span>ZMW {vat.toFixed(2)}</span>
+                        <span>ZMW {taxAmount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-slate-400">
@@ -391,16 +408,65 @@ export default function App() {
             </div>
           )}
 
+          {/* ACCOUNTING TAB */}
+          {activeTab === 'accounting' && (
+            <div className={`p-6 rounded-3xl border ${currentTheme.panel} space-y-6 max-w-2xl mx-auto w-full shadow-xl`}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className={`text-xs font-black uppercase tracking-wider ${currentTheme.textAccent}`}>
+                    {tier === 'tier1' ? 'Simple Profit & Loss Statement' : 'Core & Advanced Financial Accounting'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {tier === 'tier1' && 'Basic daily revenue and expense breakdown.'}
+                    {tier === 'tier2' && 'Automated ZRA Turnover Tax tracking and ledger balancing.'}
+                    {tier === 'tier3' && 'Multi-branch audit ledgers, asset depreciation, and fiscal balance sheets.'}
+                  </p>
+                </div>
+                <span className={`px-3 py-1 text-[10px] font-bold rounded-xl border ${currentTheme.badge}`}>
+                  {tier === 'tier1' ? 'Tier 1 Simple' : tier === 'tier2' ? 'Tier 2 Pro Accounting' : 'Tier 3 Enterprise Ledger'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-black/30 border border-white/5 rounded-2xl space-y-1">
+                  <span className="text-[10px] uppercase text-slate-400 font-mono">Total Revenue</span>
+                  <p className="text-lg font-mono font-bold text-emerald-400">ZMW 3,450.00</p>
+                </div>
+                <div className="p-4 bg-black/30 border border-white/5 rounded-2xl space-y-1">
+                  <span className="text-[10px] uppercase text-slate-400 font-mono">Total Expenses / Tax</span>
+                  <p className="text-lg font-mono font-bold text-rose-400">ZMW 820.00</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3 font-mono text-xs">
+                <div className="flex justify-between text-slate-300">
+                  <span>Gross Operating Profit:</span>
+                  <span className="text-emerald-400 font-bold">ZMW 2,630.00</span>
+                </div>
+                {tier !== 'tier1' && (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Tax Liability Reserve ({tier === 'tier2' ? '5% Turnover Tax' : '16% VAT'}):</span>
+                    <span className="text-amber-400">ZMW 172.50</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-white font-bold border-t border-white/10 pt-2">
+                  <span>Net Take-Home Earnings:</span>
+                  <span className={currentTheme.textAccent}>ZMW 2,457.50</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* HR & PAYSLIPS TAB (TIER 3 EXCLUSIVE) */}
           {activeTab === 'hr' && (
             <div className={`p-6 rounded-3xl border ${currentTheme.panel} space-y-6 max-w-4xl mx-auto w-full shadow-xl`}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                   <h3 className={`text-xs font-black uppercase tracking-wider ${currentTheme.textAccent}`}>Zambian Compliant HR & Payroll</h3>
-                  <p className="text-[11px] text-slate-400">Automated NAPSA (5%), NHIMA (1%), and ZRA PAYE statutory calculations.</p>
+                  <p className="text-[11px] text-slate-400">Automated NAPSA (5%), NHIMA (1%), and ZRA PAYE statutory calculations (K1,550/mo Tier).</p>
                 </div>
                 <span className={`px-3 py-1 text-[10px] font-bold rounded-xl border ${currentTheme.badge}`}>
-                  Tier 3 Enterprise Feature
+                  Tier 3 Enterprise (K1,550/mo)
                 </span>
               </div>
 
@@ -565,27 +631,6 @@ export default function App() {
             </div>
           )}
 
-          {/* FINANCIAL LEDGER TAB */}
-          {activeTab === 'ledger' && (
-            <div className={`p-6 rounded-3xl border ${currentTheme.panel} space-y-3 max-w-xl mx-auto w-full shadow-xl`}>
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-300">Financial Audit Ledger</h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {ledger.map(entry => (
-                  <div key={entry.id} className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5 text-xs">
-                    <div>
-                      <p className="font-bold text-white">{entry.type}</p>
-                      <p className="text-[10px] text-slate-400">Fee: {entry.fee}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-mono font-bold ${currentTheme.textAccent}`}>{entry.amount}</p>
-                      <span className="text-[9px] text-emerald-400 font-mono">{entry.status}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
         </div>
 
         {/* PAYSLIP MODAL */}
@@ -594,7 +639,7 @@ export default function App() {
             <div className={`bg-stone-900 border border-stone-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl font-mono`}>
               <div className="text-center space-y-1">
                 <h3 className="text-sm font-black text-white">{storeName}</h3>
-                <p className="text-[10px] text-amber-400">Statutory Payslip • Zambia</p>
+                <p className="text-[10px] text-amber-400">Statutory Payslip • Zambia (K1,550 Tier)</p>
                 <p className="text-[9px] text-slate-400">Employee: {selectedPayslip.name} ({selectedPayslip.role})</p>
               </div>
               <div className="space-y-2 border-t border-b border-stone-800 py-3 text-xs">
