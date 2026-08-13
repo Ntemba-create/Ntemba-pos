@@ -143,6 +143,18 @@ export default function App() {
     setInventory(prev => prev.filter(item => item.id !== id));
   };
 
+  // Void active sale/cart
+  const handleVoidSale = () => {
+    if (cart.length === 0) {
+      alert("Cart is already empty.");
+      return;
+    }
+    if (window.confirm("Are you sure you want to void this current sale transaction?")) {
+      setCart([]);
+      alert("Transaction successfully voided and cleared.");
+    }
+  };
+
   const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const backgroundFee = total * 0.01; 
   const reportMonthsAllowed = getReportMonths(selectedTier);
@@ -230,7 +242,7 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
             <form onSubmit={e => { e.preventDefault(); setView('pos'); }} className="flex flex-col gap-4 relative z-10">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Username</label>
-                <input type="text" value={username} onChange={e => username => setUsername(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} className={`w-full rounded-xl px-4 py-3 text-sm outline-none border shadow-inner ${theme.inputBg}`} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
@@ -434,9 +446,20 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                 </div>
 
                 <div className={`p-5 rounded-3xl shadow-2xl flex flex-col gap-3 ${theme.cardBg}`}>
-                  <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
-                    <span className="p-2 rounded-xl bg-white/10 shadow-inner text-base">🛒</span> Active Cart
-                  </h2>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+                      <span className="p-2 rounded-xl bg-white/10 shadow-inner text-base">🛒</span> Active Transaction Cart
+                    </h2>
+                    {cart.length > 0 && (
+                      <button 
+                        onClick={handleVoidSale}
+                        className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 rounded-xl text-[10px] font-extrabold cursor-pointer transition-all shadow-md flex items-center gap-1"
+                      >
+                        <span>❌ Void Sale</span>
+                      </button>
+                    )}
+                  </div>
+
                   {cart.length === 0 ? (
                     <p className="text-white/40 text-xs text-center py-6">No items added to current sale yet</p>
                   ) : (
@@ -459,7 +482,7 @@ TOTAL DUE:              ZMW ${total.toFixed(2)}
                       Charge ZMW {total.toFixed(2)}
                     </button>
                     <button onClick={sendWhatsAppReceipt} className="px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-2xl font-extrabold text-xs cursor-pointer shadow-xl flex items-center gap-1.5 hover:brightness-110 active:translate-y-0.5 border-t border-white/20">
-                      <span>💬 WhatsApp Receipt</span>
+                      <span>💬 Send WhatsApp Receipt</span>
                     </button>
                   </div>
                 </div>
