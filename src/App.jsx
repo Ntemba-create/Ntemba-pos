@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function App() {
   const [view, setView] = useState('pos'); // 'login', 'signup', 'forgot', 'pos'
@@ -15,24 +15,26 @@ export default function App() {
   // Custom Sale Input for Tier 1 / Quick Entry
   const [customItemName, setCustomItemName] = useState('');
   const [customItemPrice, setCustomItemPrice] = useState('');
+  const [customItemUnit, setCustomItemUnit] = useState('units'); // 'units', 'kg', 'liters'
+  const [customItemQty, setCustomItemQty] = useState('1');
   
-  // Mock Inventory Database
+  // Mock Inventory Database with Weight & Volume Metrics
   const [inventory, setInventory] = useState([
-    { id: 1, name: 'Airtime Voucher', price: 20, category: 'Telecom', stock: 45 },
-    { id: 2, name: 'Phone Charger', price: 150, category: 'Accessories', stock: 12 },
-    { id: 3, name: 'Fast USB Cable', price: 80, category: 'Accessories', stock: 24 },
-    { id: 4, name: 'Glass Protector', price: 100, category: 'Accessories', stock: 8 },
-    { id: 5, name: 'Mobile Data Bundle', price: 50, category: 'Telecom', stock: 100 },
+    { id: 1, name: 'Airtime Voucher', price: 20, unit: 'units', category: 'Telecom', stock: 45 },
+    { id: 2, name: 'Cooking Oil', price: 35, unit: 'liters', category: 'Liquids', stock: 50 },
+    { id: 3, name: 'Fresh Tomatoes', price: 25, unit: 'kg', category: 'Produce', stock: 15.5 },
+    { id: 4, name: 'Maize Meal', price: 180, unit: 'kg', category: 'Groceries', stock: 30 },
   ]);
 
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemStock, setNewItemStock] = useState('');
+  const [newItemUnit, setNewItemUnit] = useState('units');
 
   // Predictive history for repeat custom items
   const [recentCustomSales, setRecentCustomSales] = useState([
-    { name: 'Cold Bottled Water', price: 10 },
-    { name: 'Local Snack', price: 15 },
+    { name: 'Fresh Tomatoes', price: 25, unit: 'kg' },
+    { name: 'Cooking Oil', price: 35, unit: 'liters' },
   ]);
 
   const getReportMonths = (tier) => {
@@ -42,13 +44,13 @@ export default function App() {
     return 3;
   };
 
-  const addToCart = (item) => {
+  const addToCart = (item, quantity = 1) => {
     setCart(prev => {
-      const existing = prev.find(i => i.name.toLowerCase() === item.name.toLowerCase());
+      const existing = prev.find(i => i.name.toLowerCase() === item.name.toLowerCase() && i.unit === item.unit);
       if (existing) {
-        return prev.map(i => i.name.toLowerCase() === item.name.toLowerCase() ? { ...i, qty: i.qty + 1 } : i);
+        return prev.map(i => (i.name.toLowerCase() === item.name.toLowerCase() && i.unit === item.unit) ? { ...i, qty: i.qty + quantity } : i);
       }
-      return [...prev, { ...item, qty: 1 }];
+      return [...prev, { ...item, qty: quantity }];
     });
   };
 
@@ -56,16 +58,17 @@ export default function App() {
     e.preventDefault();
     if (!customItemName || !customItemPrice) return;
     const priceVal = parseFloat(customItemPrice);
+    const qtyVal = parseFloat(customItemQty || 1);
     
-    addToCart({ name: customItemName, price: priceVal });
+    addToCart({ name: customItemName, price: priceVal, unit: customItemUnit }, qtyVal);
 
-    // Save to predictive history if not already there
     if (!recentCustomSales.some(s => s.name.toLowerCase() === customItemName.toLowerCase())) {
-      setRecentCustomSales(prev => [...prev, { name: customItemName, price: priceVal }]);
+      setRecentCustomSales(prev => [...prev, { name: customItemName, price: priceVal, unit: customItemUnit }]);
     }
 
     setCustomItemName('');
     setCustomItemPrice('');
+    setCustomItemQty('1');
   };
 
   const handleAddInventoryItem = (e) => {
@@ -75,15 +78,22 @@ export default function App() {
       id: Date.now(),
       name: newItemName,
       price: parseFloat(newItemPrice),
-      stock: selectedTier === 'Basic' ? null : parseInt(newItemStock || 0)
+      unit: newItemUnit,
+      stock: selectedTier === 'Basic' ? null : parseFloat(newItemStock || 0)
     };
     setInventory(prev => [...prev, item]);
     setNewItemName('');
     setNewItemPrice('');
     setNewItemStock('');
+    setNewItemUnit('units');
+  };
+
+  const handleDeleteInventoryItem = (id) => {
+    setInventory(prev => prev.filter(item => item.id !== id));
   };
 
   const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const backgroundFee = total * 0.01; // 1% built-in platform fee calculated seamlessly in background
   const reportMonthsAllowed = getReportMonths(selectedTier);
   const filteredSuggestions = recentCustomSales.filter(s => 
     customItemName && s.name.toLowerCase().includes(customItemName.toLowerCase())
@@ -217,7 +227,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. MAIN APP HOME (AIRTEL-STYLE BOTTOM NAV & SEGREGATED MODULES) */}
+      {/* 4. MAIN APP HOME (AIRTEL-STYLE BOTTOM NAV) */}
       {view === 'pos' && (
         <div className="flex flex-col flex-1 w-full bg-slate-50 overflow-hidden relative">
           
@@ -239,33 +249,31 @@ export default function App() {
                 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-center">
-                    <h2 className="text-sm font-extrabold text-slate-900">⚡ Quick Sale Entry</h2>
+                    <h2 className="text-sm font-extrabold text-slate-900">⚡ Quick Sale Entry (Units, Kg, Liters)</h2>
                     <span className="text-[11px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold">
                       {selectedTier === 'Basic' ? 'Free-Text & Predictive Mode' : 'Catalog Tap or Quick Add'}
                     </span>
                   </div>
 
-                  {/* Free-text input with predictive recommendations */}
                   <form onSubmit={handleCustomSaleSubmit} className="flex flex-col gap-2 relative">
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
+                    <div className="flex gap-2 flex-wrap md:flex-nowrap">
+                      <div className="relative flex-1 min-w-[140px]">
                         <input 
                           type="text" 
-                          placeholder="Describe item (e.g. Cold Bottled Water)..."
+                          placeholder="Item Name (e.g. Tomatoes)..."
                           value={customItemName}
                           onChange={e => setCustomItemName(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-600"
                         />
-                        {/* Predictive suggestions drop-down */}
                         {filteredSuggestions.length > 0 && (
                           <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-xl mt-1 z-20 overflow-hidden">
                             {filteredSuggestions.map((s, idx) => (
                               <div 
                                 key={idx}
-                                onClick={() => { setCustomItemName(s.name); setCustomItemPrice(s.price.toString()); }}
+                                onClick={() => { setCustomItemName(s.name); setCustomItemPrice(s.price.toString()); setCustomItemUnit(s.unit || 'units'); }}
                                 className="px-3 py-2 text-xs hover:bg-indigo-50 cursor-pointer flex justify-between font-medium text-slate-700 border-b last:border-b-0"
                               >
-                                <span>⚡ {s.name}</span>
+                                <span>⚡ {s.name} ({s.unit})</span>
                                 <span className="font-bold text-indigo-600">ZMW {s.price}</span>
                               </div>
                             ))}
@@ -275,6 +283,26 @@ export default function App() {
                       
                       <input 
                         type="number" 
+                        step="any"
+                        placeholder="Qty / Weight"
+                        value={customItemQty}
+                        onChange={e => setCustomItemQty(e.target.value)}
+                        className="w-20 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-600"
+                      />
+
+                      <select 
+                        value={customItemUnit}
+                        onChange={e => setCustomItemUnit(e.target.value)}
+                        className="w-24 bg-slate-50 border border-slate-300 rounded-xl px-2 py-2.5 text-xs font-bold outline-none cursor-pointer"
+                      >
+                        <option value="units">Units (pcs)</option>
+                        <option value="kg">Kg (Weight)</option>
+                        <option value="liters">Liters (Vol)</option>
+                      </select>
+                      
+                      <input 
+                        type="number" 
+                        step="any"
                         placeholder="Price (ZMW)"
                         value={customItemPrice}
                         onChange={e => setCustomItemPrice(e.target.value)}
@@ -286,23 +314,21 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* Pre-existing inventory items for standard/enterprise */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
                   <h2 className="text-sm font-extrabold text-slate-900">📦 Quick Tap Catalog</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
                     {inventory.map(prod => (
-                      <div key={prod.id} onClick={() => addToCart(prod)} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between h-20 cursor-pointer hover:border-indigo-500 transition-all">
+                      <div key={prod.id} onClick={() => addToCart(prod, 1)} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between h-20 cursor-pointer hover:border-indigo-500 transition-all">
                         <span className="font-bold text-slate-800 text-xs">{prod.name}</span>
                         <div className="flex justify-between items-end">
-                          <span className="font-extrabold text-indigo-600 text-xs">ZMW {prod.price.toFixed(2)}</span>
-                          {prod.stock !== null && <span className="text-[10px] text-slate-400">Stock: {prod.stock}</span>}
+                          <span className="font-extrabold text-indigo-600 text-xs">ZMW {prod.price.toFixed(2)} / {prod.unit}</span>
+                          {prod.stock !== null && <span className="text-[10px] text-slate-400">Stock: {prod.stock} {prod.unit}</span>}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Cart & Checkout Summary */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
                   <h2 className="text-sm font-extrabold text-slate-900">🛒 Active Cart</h2>
                   {cart.length === 0 ? (
@@ -311,7 +337,7 @@ export default function App() {
                     <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
                       {cart.map((item, idx) => (
                         <div key={idx} className="flex justify-between items-center bg-slate-50 border px-3 py-2 rounded-xl text-xs">
-                          <span>{item.name} x{item.qty}</span>
+                          <span>{item.name} ({item.qty} {item.unit})</span>
                           <strong>ZMW {(item.price * item.qty).toFixed(2)}</strong>
                         </div>
                       ))}
@@ -321,7 +347,7 @@ export default function App() {
                     <span>Total Due</span>
                     <span className="text-indigo-600 text-base">ZMW {total.toFixed(2)}</span>
                   </div>
-                  <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully!`); setCart([]); }} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md">
+                  <button onClick={() => { alert(`Charged ZMW ${total.toFixed(2)} successfully! (1% Platform Fee of ZMW ${backgroundFee.toFixed(2)} recorded in backend ledger)`); setCart([]); }} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-extrabold text-xs cursor-pointer shadow-md">
                     Charge ZMW {total.toFixed(2)}
                   </button>
                 </div>
@@ -329,23 +355,20 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: INVENTORY & STOCK MAINTENANCE */}
+            {/* TAB 2: INVENTORY & STOCK MAINTENANCE (ADD & DELETE) */}
             {activeBottomTab === 'inventory' && (
               <div className="p-4 flex flex-col gap-4 max-w-4xl mx-auto w-full">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
                   <div className="flex justify-between items-center border-b pb-3">
                     <div>
                       <h2 className="text-base font-black text-slate-900">Inventory & Stock Maintenance</h2>
-                      <p className="text-xs text-slate-500">Manage catalog and stock levels for your active tier ({selectedTier})</p>
+                      <p className="text-xs text-slate-500">Manage items by units, weight (kg), or volume (liters) for your tier ({selectedTier})</p>
                     </div>
-                    {selectedTier === 'Basic' && (
-                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-full">Basic Tier: Free-form items recommended</span>
-                    )}
                   </div>
 
                   <form onSubmit={handleAddInventoryItem} className="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border">
                     <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide">Add New Stock Item</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                       <input 
                         type="text" 
                         placeholder="Item Name" 
@@ -355,14 +378,25 @@ export default function App() {
                       />
                       <input 
                         type="number" 
-                        placeholder="Price (ZMW)" 
+                        step="any"
+                        placeholder="Price per unit/kg/L (ZMW)" 
                         value={newItemPrice} 
                         onChange={e => setNewItemPrice(e.target.value)} 
                         className="bg-white border rounded-xl px-3 py-2 text-xs outline-none"
                       />
+                      <select 
+                        value={newItemUnit} 
+                        onChange={e => setNewItemUnit(e.target.value)} 
+                        className="bg-white border rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-pointer"
+                      >
+                        <option value="units">Units (pcs)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="liters">Liters (L)</option>
+                      </select>
                       {selectedTier !== 'Basic' && (
                         <input 
                           type="number" 
+                          step="any"
                           placeholder="Initial Stock Count" 
                           value={newItemStock} 
                           onChange={e => setNewItemStock(e.target.value)} 
@@ -374,16 +408,25 @@ export default function App() {
                   </form>
 
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide">Current Catalog List</h3>
+                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wide">Current Catalog & Maintenance List</h3>
                     {inventory.map(item => (
                       <div key={item.id} className="flex justify-between items-center bg-white border px-4 py-3 rounded-xl text-xs shadow-sm">
                         <div>
                           <span className="font-bold text-slate-800 block">{item.name}</span>
-                          <span className="text-slate-400 text-[10px]">Category: {item.category || 'General'}</span>
+                          <span className="text-slate-400 text-[10px]">Category: {item.category || 'General'} • Sold by: <strong className="text-indigo-600">{item.unit}</strong></span>
                         </div>
-                        <div className="text-right">
-                          <span className="font-extrabold text-indigo-600 block">ZMW {item.price.toFixed(2)}</span>
-                          {item.stock !== null && <span className="text-[10px] text-slate-500">Stock: {item.stock}</span>}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <span className="font-extrabold text-indigo-600 block">ZMW {item.price.toFixed(2)} / {item.unit}</span>
+                            {item.stock !== null && <span className="text-[10px] text-slate-500">Stock: {item.stock} {item.unit}</span>}
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteInventoryItem(item.id)}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg font-bold text-xs cursor-pointer transition-all"
+                            title="Delete Item"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -416,7 +459,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Universal Bank Scoring PDF Card for ALL Tiers */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
                   <div className="flex justify-between items-start border-b pb-3">
                     <div>
@@ -443,7 +485,7 @@ export default function App() {
 
           </div>
 
-          {/* AIRTEL-STYLE FIXED BOTTOM NAVIGATION BAR */}
+          {/* BOTTOM NAVIGATION BAR */}
           <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 flex justify-around items-center shadow-2xl z-40">
             <button 
               onClick={() => setActiveBottomTab('sales')} 
